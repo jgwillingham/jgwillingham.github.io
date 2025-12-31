@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="css/sidebar.css"> 
+  <link rel="stylesheet" href="css/cardrow.css"> 
+  <link rel="stylesheet" href="css/globalhtml.css"> 
+  <link rel="stylesheet" href="css/slideshow.css">
+
+  <title>JGW Home</title>
+</head>
+
+
+<body>
+
+
+
+<main>
+
+  <div class="sidenav">
+    <img src="img/logo.svg">
+    <a href="index.html">home</a>
+    <a href="html/projects.html">projects</a>
+    <a href="html/notes.html">notes etc.</a>
+    <a href="html/timeline.html">timeline</a>
+  </div>
+
+<div style="background-image: linear-gradient(90deg, rgb(104, 133, 111, 1),white,white);
+              border-top-right-radius:15px;
+              border-bottom-right-radius:15px;
+              width:100%;
+              height:100px;
+              display:inline-block;
+              position:relative;
+              margin-left:-3px;
+              margin-top:-8px;
+              z-index: 1;">
+  <div class="bigheader" style="background-color:transparent">
+      <h1 style="background-color:transparent;">
+        research  &nbsp; | &nbsp; development
+      </h1>
+  </div>
+</div>
+
+
+<div style="background-color:rgb(90, 90, 90); 
+          width:101%;
+          height:16px;
+          border-radius:5px;
+          margin-left:-5px;
+          margin-right:-5px;
+          margin-bottom:0px;
+          position: relative;
+          z-index: 1;">
+</div>
+
+<div class="slideshow">
+  <img class="mySlides animate-fading" src="img/sdrwaterfall.png">
+  <div class="caption animate-fading">
+    Personal Project &mdash; Due to their rapid switching, class D amplifiers are notorious
+    as sources of unintended radiation. Using a software-defined radio, the amplifier emissions
+    are measured and demodulated to audio.
+  </div>
+
+  <img class="mySlides animate-fading" src="img/arcs.PNG">
+  <div class="caption animate-fading">
+    Graduate Research &mdash; Numerical phonon calculations in Julia reveal that topological band crossings 
+    in CdTe lead to double arcs in the (110) surface dispersion
+  </div>
+
+  <img class="mySlides animate-fading" src="img/class_D_diagram.png">
+  <div class="caption animate-fading">
+    Personal Project &mdash; By abandoning linear operation, class D amplifiers can attain high power
+    efficiency without sacrificing fidelity. Here I design, simulate, 
+    and build a full-bridge, closed-loop class D amplifier.
+  </div>
+
+  <div style="text-align:center">
+    <div style="background-color:rgb(90,90,90); 
+            float:left; 
+            width:42%;
+            height:16px;
+            border-radius:5px;
+            margin-left:-5px;
+            position:relative;
+            z-index: 1;">
+    </div>
+    <span class="dot" onclick="currentSlide(0)"></span>
+    <span class="dot" onclick="currentSlide(1)"></span> 
+    <span class="dot" onclick="currentSlide(2)"></span> 
+    <div style="background-color:rgba(90,90,90); 
+            float:right; 
+            width:42%;
+            height:16px;
+            border-radius:5px;
+            margin-right:-5px;
+            position: relative;">
+    </div>
+  </div>
+</div>
+
+
+<div style="margin-left:20%;margin-right:20%;margin-top:3%">
+  <span style="font-size:32px;display:inline">WELCOME </span>
+  <p style="font-size:15px;display:inline">to my personal website! Here you will find
+    documentation on my various past projects as well as my collection of notes which cover a wide range
+    of topics.
+  </p>
+</div>
+
+ 
+</main>
+
+<script src="js/slideshow.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="../../css/sidebar.css"> 
+  <link rel="stylesheet" href="../../css/globalhtml.css">
+  <link rel="stylesheet" href="../../css/projectpages.css">
+
+  <title>JGW Project</title>
+</head>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<div class="sidenav">
+    <img src="../../img/personal_logo.svg">
+    <a href="../../index.html">home</a>
+    <a href="../timeline.html">timeline</a>
+    <a href="../projects.html">projects</a>
+    <a href="../notes.html">notes etc.</a>
+</div>
+
+
+
+<body>
+<main>
+
+<div class="bigheader">
+    <h1>topological phonons</h1>
+</div>
+<div style="margin-left:20%;margin-right:20%;margin-top:0%">
+  <p style="font-size:15px;display:block;text-align: center;">
+    &mdash;&nbsp; part of my graduate research while I was in the physics Ph.D. program at BU&nbsp;&mdash;
+  </p>
+</div>
+<hr>
+
+<div class="project">
+
+    <div class="projectnav">
+        <a href="#conceptualintroduction"> &sect; Conceptual Introduction</a><br>
+        <a href="#weylphonons"> &sect; Weyl Phonons</a><br>
+        <a href="#latticedynamicsjl"> &sect; LatticeDynamics.jl</a>
+    </div>
+
+    <div class="projecttext">
+
+        <h2 style="font-size:24px" id="conceptualintroduction"> Conceptual Introduction</h2>
+        <p style="font-size:15px;">
+            Perhaps the primary goal of condensed matter physics is to classify phases of matter. 
+	    Historically, the best tool in that pursuit has been symmetry (see Landau's theory of
+	    second order phase transitions), but more recently topology has emerged as a critical tool
+	    for understanding quantum matter. In particular, topology has proven to be highly fruitful
+	    in studying crystalline systems where the theory largely goes by the name <em>topological band theory</em>. 
+	    A proper introduction to the subject requires quite a bit of background and can come from a variety of perspectives,
+	    but the gist is that a topological phase is one which exhibits some form of topological obstruction 
+	    (twist, hole, etc.) that separates it from the vacuum. This twist or hole is not in real space but
+	    instead is in the state space (i.e. it is a property of the groundstate) making it fairly abstract to fresh eyes.
+        <p style="font-size:15px;">
+	    A central feature of topological phases is that they tend to have unusual surface properties. Intuitively, 
+	    since there is a "twist" in the bulk of a topological solid and there is no twist in the vacuum/air outside,
+	    there must be some sort of "untwisting" at the surface. The result is bizarre surface behavior that is highly robust
+	    and is said to be <em>topologically protected</em> (at least perturbatively). This was the focus of my research &mdash;
+	    topological surface states.
+        <p style="font-size:15px;">
+	    Topological band theory is rich and beautiful so I would be regretful if I did not at least provide a peak into the
+	    theory for the mathematically inclined. Consider this a starting point for someone who wants to 
+	    read more about the details:
+        <p style="font-size:15px;margin-left:45px">
+	    One approach known as <a href="https://arxiv.org/abs/1709.01935"><em>topological quantum chemistry</em></a> uses 
+	    graph theory and an unorthodox representation theory of space groups to infer if a band structure has a corresponding real 
+	    space description. Here, a topological system is one which does not have such a real space description and 
+	    is said to have an <em>obstructed atomic limit</em>. 
+        </p>
+        <p style="font-size:15px;margin-left:45px">
+	    Another more general approach uses <em>topological K-theory</em> (<a href="https://www.math.harvard.edu/media/Krulewski-K-Theoretic-thesis.pdf">pdf</a>), a scheme for classifying
+	    vector bundles by their topological properties. Here, we utilize the fact that the ground state
+	    configuration of a crystalline system forms a vector bundle over a compact momentum space which is 
+	    isomorphic to a <em>d</em>-torus in <em>d</em> dimensions. 
+        </p>
+        </p>
+
+        <h2 style="font-size:24px" id="weylphonons">Theory of Weyl Phonons</h2>
+        <p style="font-size:15px;">
+        </p>
+
+        <h2 style="font-size:24px" id="latticedynamicsjl"><span class="code">LatticeDynamics.jl</span> </h2>
+        <p style="font-size:15px;">
+            As part of my graduate work studying topological surface phonons, I developed a 
+            Julia package called <span class="code">LatticeDynamics.jl</span>. It consists of tools for 
+            studying crystal phonons by building interatomic force models and computing their bulk and 
+            surface phonon structure. Surfaces can be studied in both slab and semi-infinite geometries.
+        </p>
+
+</div>
+
+</div>
+
+
+</main>
+</body>
+
+
+</html>

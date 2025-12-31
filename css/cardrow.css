@@ -1,0 +1,73 @@
+
+.row {
+display: block;
+flex-direction: row;
+text-align: center;
+}
+
+/* Three columns side by side */
+.column {
+    display: inline-block;
+    width: 25%;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    padding: 0 8px;
+  }
+
+
+  /* Display the columns below each other instead of side by side on small screens */
+  @media screen and (max-width: 650px) {
+    .column {
+      width: 100%;
+      display: block;
+    }
+  }
+  
+  /* Add some shadows to create a card effect */
+  .card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.5s;
+    height: 100%;
+  }
+
+
+  .card:hover {
+    box-shadow:  0 4px 16px 0 rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Some left and right padding inside the container */
+  .container {
+    padding: 20px 20px;
+  }
+  
+  /* Clear floats */
+  .container::after, .row::after {
+    content: "";
+    clear: both;
+    display: table;
+  }
+  
+  .title {
+    color: grey;
+  }
+
+
+  .brief {
+    text-align: left;
+  }
+  
+  .button {
+    border: none;
+    outline: 0;
+    display: inline-block;
+    padding: 8px;
+    color: white;
+    background-color: rgb(90,90,90);
+    text-align: center;
+    cursor: pointer;
+    width: 100%;
+  }
+  
+  .button:hover {
+    background-color: rgb(37, 37, 37);
+  }
