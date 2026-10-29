@@ -9,7 +9,7 @@ image_alt: Block diagram of a full-bridge, closed-loop class D amplifier
 featured: true
 order: 2
 toc: true
-published: false   # set to true once written
+published: true   # set to true once written
 redirect_from: /html/projects/class_d_amplifier.html
 ---
 

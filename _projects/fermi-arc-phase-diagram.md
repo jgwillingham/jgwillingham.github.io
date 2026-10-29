@@ -7,6 +7,6 @@ image_alt: Phase diagram of Fermi arc surface states
 order: 5
 math: true
 toc: true
-published: false   # set to true once written
+published: true   # set to true once written
 ---
 

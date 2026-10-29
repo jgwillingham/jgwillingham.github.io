@@ -6,7 +6,7 @@ context: Part of my graduate work in the physics Ph.D. program at Boston Univers
 order: 6
 math: true
 toc: true
-published: false   # set to true once written
+published: true   # set to true once written
 redirect_from: /html/projects/electron_phonon_coupling.html
 ---
 

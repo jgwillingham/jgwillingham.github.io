@@ -6,7 +6,7 @@ image: /assets/img/var-plot.png
 image_alt: Value-at-risk plot
 order: 4
 toc: true
-published: false   # set to true once written
+published: true   # set to true once written
 redirect_from: /html/projects/risk_evaluation.html
 ---
 
