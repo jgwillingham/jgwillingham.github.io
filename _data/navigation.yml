@@ -1,0 +1,8 @@
+# Top navigation, in display order.
+- title: Projects
+  url: /projects/
+- title: Experience
+  url: /experience/
+# Uncomment once notes.md exists:
+# - title: Notes
+#   url: /notes/

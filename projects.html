@@ -1,0 +1,12 @@
+---
+title: Projects
+subtitle: Personal and academic projects in physics, electronics and software.
+permalink: /projects/
+redirect_from: /html/projects.html
+---
+{%- assign projects = site.projects | sort: "order" -%}
+<ul class="card-grid">
+  {%- for project in projects %}
+  <li>{% include project-card.html project=project %}</li>
+  {%- endfor %}
+</ul>

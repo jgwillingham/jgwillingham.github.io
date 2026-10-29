@@ -1,0 +1,54 @@
+---
+layout: default
+---
+<div class="wrap section">
+  <header class="page-header">
+    <p class="eyebrow">{{ page.category }}</p>
+    <h1>{{ page.title }}</h1>
+    {%- if page.context %}
+    <p class="lede">{{ page.context }}</p>
+    {%- endif %}
+  </header>
+
+  <div class="project-layout{% if page.toc %} has-toc{% endif %}">
+    {%- if page.toc %}
+    <nav class="toc" aria-label="On this page" hidden>
+      <p class="toc__title">On this page</p>
+      <ol></ol>
+    </nav>
+    {%- endif %}
+
+    <article class="prose">
+      {%- if page.image %}
+      <figure>
+        <img src="{{ page.image | relative_url }}" alt="{{ page.image_alt | default: page.title }}">
+        <figcaption>{{ page.summary }}</figcaption>
+      </figure>
+      {%- endif %}
+      {{ content }}
+    </article>
+  </div>
+
+  <p class="back-link"><a href="{{ '/projects/' | relative_url }}">&larr; All projects</a></p>
+</div>
+
+{%- if page.toc %}
+<script>
+  // Build the "On this page" list from the article's h2 headings.
+  (function () {
+    var toc = document.querySelector('.toc');
+    var headings = document.querySelectorAll('.prose h2[id]');
+    if (!toc || headings.length < 2) return;
+    var list = toc.querySelector('ol');
+    headings.forEach(function (h) {
+      var a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      var li = document.createElement('li');
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+    toc.hidden = false;
+  })();
+</script>
+{%- endif %}

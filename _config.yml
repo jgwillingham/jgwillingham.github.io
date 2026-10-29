@@ -1,3 +1,49 @@
-theme: jekyll-theme-minimal
-title: Octocat's homepage
-description: Bookmark this to keep an eye on my project updates!
+# Site identity: edit these to change the name, tagline and links shown site-wide.
+title: J. G. Willingham
+tagline: Signal processing engineer and physicist
+description: >-
+  Signal processing engineer with a background in condensed matter physics.
+  Project write-ups on computational physics, circuit design and software-defined radio.
+url: https://jgwillingham.github.io
+baseurl: ""
+lang: en
+
+# Contact links. Leave a value empty ("") to hide it.
+social:
+  github: jgwillingham
+  linkedin: ""
+  email: ""
+
+collections:
+  projects:
+    output: true
+    permalink: /projects/:name/
+
+defaults:
+  - scope:
+      path: ""
+      type: projects
+    values:
+      layout: project
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: page
+
+markdown: kramdown
+kramdown:
+  input: GFM   # $$...$$ math is converted to \( \) / \[ \] for MathJax
+
+sass:
+  style: compressed
+
+plugins:
+  - jekyll-redirect-from
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - "*.drawio"
+  - vendor

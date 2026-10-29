@@ -1,0 +1,11 @@
+---
+title: Experience
+subtitle: My academic and professional history, newest first.
+permalink: /experience/
+redirect_from: /html/timeline.html
+---
+<ol class="timeline">
+  {%- for entry in site.data.experience %}
+  {% include timeline-item.html entry=entry %}
+  {%- endfor %}
+</ol>

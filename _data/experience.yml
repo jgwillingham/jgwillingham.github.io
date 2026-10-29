@@ -1,0 +1,37 @@
+# Newest first. `kind: milestone` renders as a compact line instead of a card.
+- year: 2021
+  role: Signal Processing Engineer
+  org: Leidos Innovation Center (LInC)
+  tags: [Cognitive radio, MASINT systems, Oscillator stability]
+
+- year: 2021
+  kind: milestone
+  text: Mastered out of the Boston University physics Ph.D. program
+
+- year: 2018
+  role: Condensed Matter Physics Research
+  org: Boston University Surface Physics Lab
+  tags: [Lattice dynamics, Band topology, ToF atomic scattering]
+
+- year: 2018
+  role: Physics Teaching Fellow
+  org: Boston University Physics Department
+  tags: [Classical mechanics, E&M and relativity, Quantum mechanics]
+
+- year: 2018
+  kind: milestone
+  text: Joined the Boston University physics Ph.D. program
+
+- year: 2017
+  role: Data Science Intern
+  org: Fluence Analytics
+  tags: [Static light scattering, Instrumentation R&D, Jump detection]
+
+- year: 2017
+  kind: milestone
+  text: B.S. in Physics, Tulane University
+
+- year: 2016
+  role: Nanodevice Physics Research
+  org: Tulane University Quantum Device Lab
+  tags: [Atomic force microscopy, PID control, 2D materials]
