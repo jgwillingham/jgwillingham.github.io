@@ -1,31 +1,27 @@
 # Newest first. `kind: milestone` renders as a compact line instead of a card.
+- year: 2026
+  role: Senior Machine Learning Engineer
+  org: Mirion - Applied AI Team
+  tags: [Machine learning, Signal processing, AI systems]
+
 - year: 2021
   role: Signal Processing Engineer
-  org: Leidos Innovation Center (LInC)
+  org: Leidos - Leidos Innovation Center (LInC)
   tags: [Cognitive radio, MASINT systems, Oscillator stability]
 
 - year: 2021
   kind: milestone
-  text: Mastered out of the Boston University physics Ph.D. program
+  text: Left the Boston University physics Ph.D. program with my master's
 
 - year: 2018
   role: Condensed Matter Physics Research
   org: Boston University Surface Physics Lab
   tags: [Lattice dynamics, Band topology, ToF atomic scattering]
 
-- year: 2018
-  role: Physics Teaching Fellow
-  org: Boston University Physics Department
-  tags: [Classical mechanics, E&M and relativity, Quantum mechanics]
-
-- year: 2018
-  kind: milestone
-  text: Joined the Boston University physics Ph.D. program
-
 - year: 2017
   role: Data Science Intern
   org: Fluence Analytics
-  tags: [Static light scattering, Instrumentation R&D, Jump detection]
+  tags: [Static light scattering, Instrumentation R&D, Data analysis]
 
 - year: 2017
   kind: milestone

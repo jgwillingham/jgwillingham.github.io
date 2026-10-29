@@ -1,8 +1,8 @@
 # Site identity: edit these to change the name, tagline and links shown site-wide.
-title: J. G. Willingham
-tagline: Signal processing engineer and physicist
+title: George Willingham
+tagline: ML | DSP | Physics
 description: >-
-  Signal processing engineer with a background in condensed matter physics.
+  ML and signal processing engineer with a background in condensed matter physics.
   Project write-ups on computational physics, circuit design and software-defined radio.
 url: https://jgwillingham.github.io
 baseurl: ""
