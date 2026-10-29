@@ -1,0 +1,87 @@
+---
+title: Notes
+subtitle: Notes I've written on topics in mathematics, physics and engineering. Each one opens as a PDF.
+permalink: /notes/
+redirect_from: /html/notes.html
+---
+{%- assign note_count = 0 -%}
+{%- for group in site.data.notes %}{% assign note_count = note_count | plus: group.notes.size %}{% endfor -%}
+
+{%- if note_count == 0 %}
+<p class="lede">Notes are on the way.</p>
+{%- else %}
+
+<nav class="subject-jump" aria-label="Subjects">
+  <ul class="tags">
+    {%- for group in site.data.notes %}
+    {%- if group.notes.size > 0 %}
+    <li><a href="#{{ group.subject | slugify }}">{{ group.subject }} <span class="count">{{ group.notes.size }}</span></a></li>
+    {%- endif %}
+    {%- endfor %}
+  </ul>
+</nav>
+
+{%- for group in site.data.notes %}
+{%- if group.notes.size > 0 %}
+<section class="note-group" id="{{ group.subject | slugify }}">
+  <h2>{{ group.subject }}</h2>
+  <ul class="note-list">
+    {%- for note in group.notes %}
+    <li class="note" data-note="{{ note.path }}">
+      <div class="note__head">
+        <a class="note__title" href="{{ site.notes.pdf_url }}/{{ note.path }}.pdf">{{ note.title }}</a>
+        {%- if note.status == "draft" %}
+        <span class="badge">In progress</span>
+        {%- endif %}
+      </div>
+      {%- if note.description %}
+      <p class="note__desc">{{ note.description }}</p>
+      {%- endif %}
+      {%- if note.topics %}
+      <ul class="tags">
+        {%- for topic in note.topics %}
+        <li>{{ topic }}</li>
+        {%- endfor %}
+      </ul>
+      {%- endif %}
+      <p class="note__meta">
+        <span>PDF</span>
+        <span class="note__updated" hidden></span>
+        {%- if site.notes.source_url != "" %}
+        <a href="{{ site.notes.source_url }}/tree/main/notes/{{ note.path }}">LaTeX source</a>
+        {%- endif %}
+      </p>
+    </li>
+    {%- endfor %}
+  </ul>
+</section>
+{%- endif %}
+{%- endfor %}
+
+<script>
+  // Fill in "Updated <date> · <size>" from the manifest the notes repo publishes
+  // next to its PDFs, and flag listed notes whose PDF hasn't been published.
+  (function () {
+    var base = {{ site.notes.pdf_url | jsonify }};
+    fetch(base + '/manifest.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (manifest) {
+        if (!manifest) return;
+        document.querySelectorAll('[data-note]').forEach(function (el) {
+          var info = manifest.notes[el.getAttribute('data-note')];
+          var slot = el.querySelector('.note__updated');
+          if (info) {
+            var date = new Date(info.updated + 'T00:00:00');
+            slot.textContent = 'Updated ' + date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) +
+              ' · ' + info.size_kb + ' KB';
+          } else {
+            el.classList.add('is-missing');
+            slot.textContent = 'PDF not published yet';
+          }
+          slot.hidden = false;
+        });
+      })
+      .catch(function () {});
+  })();
+</script>
+{%- endif %}

@@ -1,0 +1,51 @@
+# Notes listed on /notes/, grouped by subject (shown in this order).
+# The Notes nav link appears automatically once at least one note is listed.
+#
+# Each note:
+#   title:       shown as the link text
+#   path:        <subject-folder>/<note-folder> in the notes repo; the PDF is <pdf_url>/<path>.pdf
+#   description: one or two sentences
+#   topics:      optional list of tags
+#   status:      optional; "draft" shows an "In progress" badge
+#
+# Example:
+#   - subject: Mathematics
+#     notes:
+#       - title: Linear Algebra
+#         path: mathematics/linear-algebra
+#         description: Vector spaces, linear maps and spectral theory, with physics applications.
+#         topics: [Vector spaces, Eigenvalues, Inner products]
+#         status: draft
+
+- subject: Mathematics
+  notes:
+    - title: Representation Theory
+      path: mathematics/representation-theory
+      description: Representing groups as linear transformations on vector spaces.
+    - title: Linear Algebra
+      path: mathematics/linear-algebra
+      description: Vector spaces, linear maps and spectral theory, with physics applications.
+    - title: K-Theory
+      path: mathematics/k-theory
+      description: Classification of vector bundles
+
+- subject: Physics
+  notes:
+    - title: Quantum Field Theory
+      path: physics/quantum-field-theory
+      description: Notes on many-body and relativistic quantum mechanics
+    - title: Quantum Mechanics
+      path: physics/quantum-mechanics
+      description: Notes on quantum mechanics
+    - title: Electrodynamics
+      path: physics/electrodynamics
+      description: Notes on electromagnetic theory at an early graduate level
+
+- subject: Engineering
+  notes:
+    - title: 3-Phase Machines
+      path: engineering/3-phase-machines
+      description: Study of the design, operation, and control of three-phase electrical machines.
+    - title: Spectrum Estimation
+      path: engineering/spectrum-estimation
+      description: Techniques for estimating the spectral content of signals

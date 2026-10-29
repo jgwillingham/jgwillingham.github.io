@@ -1,9 +1,12 @@
+{%- assign note_count = 0 -%}
+{%- for group in site.data.notes %}{% assign note_count = note_count | plus: group.notes.size %}{% endfor -%}
 <header class="site-header">
   <div class="wrap site-header__inner">
     <a class="wordmark" href="{{ '/' | relative_url }}">{{ site.title }}</a>
     <nav aria-label="Main">
       <ul class="site-nav">
         {%- for link in site.data.navigation %}
+        {%- if link.requires_notes and note_count == 0 %}{% continue %}{% endif %}
         {%- assign current = page.url | slice: 0, link.url.size %}
         <li><a href="{{ link.url | relative_url }}"{% if current == link.url %} aria-current="page"{% endif %}>{{ link.title }}</a></li>
         {%- endfor %}
