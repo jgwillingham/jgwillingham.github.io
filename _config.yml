@@ -2,8 +2,8 @@
 title: George Willingham
 tagline: ML | DSP | Physics
 description: >-
-  ML and signal processing engineer with a background in condensed matter physics.
-  Project write-ups on computational physics, circuit design and software-defined radio.
+  R&D engineer with a background in condensed matter physics, specializing in machine learning and signal processing.
+  On this site, I share research, projects, and notes on a wide range of topics.
 url: https://jgwillingham.github.io
 baseurl: ""
 lang: en
@@ -11,14 +11,14 @@ lang: en
 # Contact links. Leave a value empty ("") to hide it.
 social:
   github: jgwillingham
-  linkedin: ""
+  linkedin: "https://www.linkedin.com/in/george-willingham-46b23797/"
   email: ""
 
 # Notes: PDFs are compiled and hosted by the separate notes repo's GitHub Pages site.
 # The list of notes shown on /notes/ lives in _data/notes.yml.
 notes:
   pdf_url: https://jgwillingham.github.io/latex-notes
-  source_url: https://github.com/jgwillingham/latex-notes   # "" hides "LaTeX source" links
+  source_url: "" #https://github.com/jgwillingham/latex-notes   # "" hides "LaTeX source" links
 
 collections:
   projects:

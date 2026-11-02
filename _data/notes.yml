@@ -25,6 +25,9 @@
     - title: Linear Algebra
       path: mathematics/linear-algebra
       description: Vector spaces, linear maps and spectral theory, with physics applications.
+    - title: Lie Theory
+      path: mathematics/lie-theory
+      description: Notes on Lie groups, Lie algebras, and their representations.
     - title: K-Theory
       path: mathematics/k-theory
       description: Classification of vector bundles
@@ -39,10 +42,13 @@
       description: Notes on quantum mechanics
     - title: Electrodynamics
       path: physics/electrodynamics
-      description: Notes on electromagnetic theory at an early graduate level
+      description: Notes on electromagnetic theory
 
 - subject: Engineering
   notes:
+    - title: Machine Learning
+      path: engineering/machine-learning
+      description: Notes on statistical learning theory, classic models, and deep learning
     - title: 3-Phase Machines
       path: engineering/3-phase-machines
       description: Study of the design, operation, and control of three-phase electrical machines.

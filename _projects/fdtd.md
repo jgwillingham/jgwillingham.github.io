@@ -1,8 +1,9 @@
 ---
-title: FDTD Solver for Electrodynamics
+title: FDTD on a GPU
 category: Computational Physics
 summary: >-
-  Finite-Difference Time Domain (FDTD) is a popular method for computational electromagnetics . I developed a solver of my own and used it to train PINNs
+  Finite-Difference Time Domain (FDTD) solves Maxwell's equations by leapfrogging spacetime-staggered electric and magnetic fields. Here I write a GPU-accelerated solver using PyTorch
+context: Developing an FDTD solver and training a PINN
 image: /assets/img/yee_algorithm.png
 image_alt: Leapfrogging in the Yee algorithm
 featured: true
@@ -10,12 +11,11 @@ math: true
 order: 2
 toc: true
 published: true   # set to true once written
-
 ---
 
 ## Review of FDTD
 
-**Finite-Difference Time Domain** (FDTD) is a technique for numerically solving PDEs. In particular, FDTD gets a great deal of use in computational electromagnetics (CEM). The central equations to solve are the dynamic Maxwell's equations, Faraday's law and Ampere's law:
+**Finite-Difference Time Domain** (FDTD) is a technique for numerically solving PDEs in computational electromagnetics. The central equations to solve are the dynamic Maxwell's equations, Faraday's law and Ampere's law:
 
 $$\nabla\times E = -\mu\frac{\partial H}{\partial t} $$
 
@@ -67,3 +67,32 @@ $$\qquad\qquad\qquad\qquad+\frac{1}{\varepsilon}\frac{\Delta_t}{\Delta_x}\epsilo
 $$\;-\frac{\Delta_t}{\varepsilon} j_i^{n+\frac{1}{2}}[m+\hat{i}/2]\qquad\qquad\qquad\qquad\qquad$$
 
 Once we shift to the Yee lattice, the update equations and the rest of FDTD fall out naturally. Taking central finite differences immediately relates H-fields on faces to E-fields on edges and vice versa. But as a consequence of the Yee lattice, not only are the E and H fields defined at different points in time, but all 6 values $$E_x,E_y,E_z,H_x,H_y,H_z$$ are computed at different positions in space too. This means that to compute the full field vector at any single point in spacetime, the results from FDTD must be **interpolated**.
+
+
+## Dispersion and Stability
+
+The algorithm as discussed so far is fully valid but there are details that must be touched upon. It seems obvious that as $$\Delta_x$$ and $$\Delta_t$$ tend toward zero, we get a better and better approximation to the true solution.However, what might not be obvious at first is that we cannot (or perhaps should not) treat the step sizes independently. One important consequence of a poor choice of step size is the algorithm can become unstable. This stems from the fact that the Yee lattice is a dispersive medium just by virtue of being discrete. We will prove this now. 
+	
+As is well known, solutions to Maxwell's equations are also solutions to the wave equation:
+
+$$ \frac{\partial^2 E}{\partial t^2} - c^2\nabla^2E = 0 $$
+
+In continuous spacetime, this can be solved with a plane wave of the form $$E(x,t)=e^{i(k\cdot x- \omega t)}\hat{z}$$. Plugging this into the wave equation yields the classic dispersion(less) relation $$ \omega = c\|k\| $$.Things become a bit different when we move onto the lattice. The wave equation can be replaced with second-order central finite differences so that
+
+$$ \frac{E_z^{n+1}[m] - 2E_z^n[m] + E_z^{n-1}[m]}{\Delta_t^2} = \frac{c^2}{\Delta_x^2}\sum_{i=x,y,z}\left[ E_z^n[m+\hat{i}] - 2E_z^n[m] + E_z^n[m - \hat{i}] \right]$$
+
+And the $$z$$-component of the plane wave becomes
+
+$$ E_z^n[m] = e^{i(k\cdot m\Delta_x - \omega n\Delta_t)} $$
+
+Observe that the discretized plane wave has the following properties. When shifted in time, we get $$ E_z^{n+1}[m] = e^{-i\omega\Delta_t} E_z^n[m]$$ and similarly when shifted in space: $$ E_z^n[m + \hat{x}] = e^{ik_x\Delta_x} E_z^n[m]$$. Just as the continuous wave equation reduces to $$\omega^2=c^2\|k\|^2$$ for a plane wave, these shift identities and a couple trig identities can be used to show that the discrete wave equation reduces to the **lattice dispersion relation**:
+
+$$ \sin^2(\omega\Delta_t) = \frac{c^2\Delta_t^2}{\Delta_x^2} \left[\sin^2(k_x\Delta_x) + \sin^2(k_y\Delta_x) + \sin^2(k_z\Delta_x) \right]$$
+
+Now for stable wave solutions, we must have **real**-valued solutions $$\omega$$ for every $$k_x,k_y,k_z$$ in this equation. But the left side is clearly bounded from above by 1 so if the right exceeds 1, then no real solution $$\omega$$ exists --- we get frequencies with imaginary components leading to exponentially growing/decaying waves. In the maximum case where all the sines on the right are 1, this gives us a stability condition:
+
+$$ \frac{c^2\Delta_t^2}{\Delta_x^2} 3 \leq 1 $$
+
+Defining the **Courant number** $$S\equiv c\Delta_t/\Delta_x$$, this becomes
+
+$$ S\leq \frac{1}{\sqrt{3}} $$
