@@ -1,9 +1,8 @@
 # Site identity: edit these to change the name, tagline and links shown site-wide.
 title: George Willingham
-tagline: ML | DSP | Physics
-description: >-
-  R&D engineer with a background in condensed matter physics, specializing in machine learning and signal processing.
-  On this site, I share research, projects, and notes on a wide range of topics.
+tagline: ML  &#9679;  Signal Processing  &#9679;  Physics
+description: |-
+  Read, explore, and engage with my research, projects, and notes
 url: https://jgwillingham.github.io
 baseurl: ""
 lang: en
