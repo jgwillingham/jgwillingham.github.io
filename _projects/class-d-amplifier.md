@@ -6,8 +6,8 @@ summary: >-
   sacrificing fidelity. Here I design, simulate and build a full-bridge, closed-loop class D amplifier.
 image: /assets/img/class-d-diagram.png
 image_alt: Block diagram of a full-bridge, closed-loop class D amplifier
-featured: true
-order: 2
+featured: false
+order: 4
 toc: true
 published: true   # set to true once written
 redirect_from: /html/projects/class_d_amplifier.html
