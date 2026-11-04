@@ -32,6 +32,16 @@ layout: default
   <p class="back-link"><a href="{{ '/projects/' | relative_url }}">&larr; All projects</a></p>
 </div>
 
+<script>
+  // Size embedded interactive figures (_includes/viz.html) to their content.
+  window.addEventListener('message', function (e) {
+    if (!e.data || e.data.type !== 'viz-resize') return;
+    document.querySelectorAll('figure.viz iframe').forEach(function (f) {
+      if (f.contentWindow === e.source) f.style.height = Math.ceil(e.data.height) + 'px';
+    });
+  });
+</script>
+
 {%- if page.toc %}
 <script>
   // Build the "On this page" list from the article's h2 headings.

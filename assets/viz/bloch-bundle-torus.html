@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Bloch bundle</title>
+<style>
+:root{--fg:#2C2C2A;--sec:#5F5E5A;--muted:#888780;--line:#D3D1C7;--accent:#1D9E75;--warm:#D85A30;--cool:#378ADD;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441}}
+:root[data-theme="dark"]{--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441}
+html,body{margin:0;background:transparent;color:var(--fg);font:14px/1.5 var(--font)}
+.viz{max-width:760px;margin:0 auto;padding:12px 10px}
+canvas{display:block;width:100%;touch-action:none;cursor:grab}
+</style>
+</head>
+<body>
+<div class="viz" role="figure" aria-label="Interactive figure: the Bloch bundle of a two-band model. Each point of the Brillouin-zone torus carries an eigenstate, drawn as an arrow. Drag to rotate.">
+  <canvas id="t" style="height:340px" aria-label="Brillouin-zone torus with an eigenstate arrow attached at each wavevector; drag to rotate"></canvas>
+</div>
+<script>
+const P=new URLSearchParams(location.search);if(P.get('theme'))document.documentElement.dataset.theme=P.get('theme');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function prep(c){const r=c.getBoundingClientRect(),q=window.devicePixelRatio||1;c.width=Math.max(1,Math.round(r.width*q));c.height=Math.max(1,Math.round(r.height*q));const g=c.getContext('2d');g.setTransform(q,0,0,q,0,0);return[g,r.width,r.height]}
+function postH(){if(window.parent!==window)window.parent.postMessage({type:'viz-resize',height:document.documentElement.scrollHeight},'*')}
+if(window.parent!==window)document.documentElement.style.overflow='hidden';
+new ResizeObserver(postH).observe(document.body);
+
+const PI=Math.PI,TAU=2*PI,M=1;
+const T=document.getElementById('t');
+let yaw=0.6,pitch=1.0;
+function d(kx,ky,m){const x=Math.sin(kx),y=Math.sin(ky),z=m+Math.cos(kx)+Math.cos(ky),n=Math.hypot(x,y,z)||1;return[x/n,y/n,z/n]}
+function col(z){const a=[216,90,48],b=[55,138,221],t=(z+1)/2;return'rgb('+a.map((v,i)=>Math.round(b[i]+(v-b[i])*t)).join(',')+')'}
+function rot(p){let[x,y,z]=p;const cy=Math.cos(yaw),sy=Math.sin(yaw);[x,y]=[cy*x-sy*y,sy*x+cy*y];const cp=Math.cos(pitch),sp=Math.sin(pitch);[y,z]=[cp*y-sp*z,sp*y+cp*z];return[x,y,z]}
+const R=1,r=0.42;
+function Pt(kx,ky){const a=R+r*Math.cos(ky);return[a*Math.cos(kx),a*Math.sin(kx),r*Math.sin(ky)]}
+
+function draw(){
+  const[g,w,h]=prep(T);const muted=css('--muted'),sec=css('--sec');
+  const sc=Math.min(w/3.3,h/2.5),cx=w/2,cy=h/2+8;const pr=p=>{const q=rot(p);return[cx+q[0]*sc,cy-q[1]*sc,q[2]]};
+  const items=[],A=36,B=16;
+  for(let i=0;i<A;i++)for(let j=0;j<B;j++){const k1=TAU*i/A,k2=TAU*j/B;const p=pr(Pt(k1,k2)),q1=pr(Pt(k1+TAU/A,k2)),q2=pr(Pt(k1,k2+TAU/B));
+    for(const q of[q1,q2])items.push({z:(p[2]+q[2])/2,f:()=>{g.strokeStyle=muted;g.lineWidth=0.5;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke()}})}
+  const FA=24,FB=10;
+  for(let i=0;i<FA;i++)for(let j=0;j<FB;j++){const k1=TAU*i/FA,k2=TAU*j/FB;const b=Pt(k1,k2),n=d(k1,k2,M),tip=[b[0]+0.26*n[0],b[1]+0.26*n[1],b[2]+0.26*n[2]];const p=pr(b),q=pr(tip),c=col(n[2]);
+    items.push({z:Math.max(p[2],q[2])+0.01,f:()=>{g.strokeStyle=c;g.fillStyle=c;g.lineWidth=1.6;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke();g.beginPath();g.arc(q[0],q[1],2,0,TAU);g.fill()}})}
+  items.sort((a,b)=>a.z-b.z);let z0=1e9,z1=-1e9;for(const o of items){if(o.z<z0)z0=o.z;if(o.z>z1)z1=o.z}
+  for(const o of items){g.globalAlpha=0.18+0.82*(o.z-z0)/(z1-z0+1e-9);o.f()}g.globalAlpha=1;
+  g.fillStyle=sec;g.font='12px '+css('--font');g.fillText('Base: Brillouin zone T²',8,16);g.fillText('Fiber over each k: eigenstate |u(k)⟩',8,32);g.fillText('drag to rotate',8,48);
+}
+let drag=null;
+T.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];T.setPointerCapture(e.pointerId)});
+T.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-drag[0])*0.01;pitch=Math.max(0.1,Math.min(2.9,pitch-(e.clientY-drag[1])*0.01));drag=[e.clientX,e.clientY];draw()});
+T.addEventListener('pointerup',()=>drag=null);
+addEventListener('resize',()=>{draw();postH()});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+draw();postH();
+</script>
+</body>
+</html>

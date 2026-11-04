@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brillouin zone as a torus</title>
+<style>
+:root{--fg:#2C2C2A;--sec:#5F5E5A;--muted:#888780;--line:#D3D1C7;--accent:#1D9E75;--warm:#D85A30;--cool:#378ADD;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441}}
+:root[data-theme="dark"]{--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441}
+html,body{margin:0;background:transparent;color:var(--fg);font:14px/1.5 var(--font)}
+.viz{max-width:760px;margin:0 auto;padding:12px 10px}
+canvas{display:block;width:100%;touch-action:none}
+.grid2{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:620px){.grid2{grid-template-columns:1fr 1fr}}
+.row{display:flex;align-items:center;gap:10px;color:var(--sec);margin-top:10px}
+.row label{min-width:96px}
+.row input[type=range]{flex:1;min-width:0;max-width:280px;accent-color:var(--accent)}
+.out{min-width:56px;text-align:right;font-variant-numeric:tabular-nums}
+.note{color:var(--sec);font-size:13px;margin-top:6px;min-height:1.5em}
+</style>
+</head>
+<body>
+<div class="viz" role="figure" aria-label="Interactive figure: wavevectors that differ by a reciprocal lattice vector are identified, so the Brillouin zone's opposite edges glue together into a torus.">
+  <div class="grid2">
+    <canvas id="lat" style="height:300px;cursor:crosshair" aria-label="Reciprocal lattice with a draggable wavevector k and its equivalent copies k + G"></canvas>
+    <canvas id="tor" style="height:300px;cursor:grab" aria-label="The Brillouin zone being glued into a torus; drag to rotate"></canvas>
+  </div>
+  <div class="row"><label for="fold">Glue edges</label><input id="fold" type="range" min="0" max="1" step="0.005" value="0"><span class="out" id="foldv"></span></div>
+  <div class="note" id="note"></div>
+</div>
+<script>
+const P=new URLSearchParams(location.search);if(P.get('theme'))document.documentElement.dataset.theme=P.get('theme');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function prep(c){const r=c.getBoundingClientRect(),q=window.devicePixelRatio||1;c.width=Math.max(1,Math.round(r.width*q));c.height=Math.max(1,Math.round(r.height*q));const g=c.getContext('2d');g.setTransform(q,0,0,q,0,0);return[g,r.width,r.height]}
+function postH(){if(window.parent!==window)window.parent.postMessage({type:'viz-resize',height:document.documentElement.scrollHeight},'*')}
+if(window.parent!==window)document.documentElement.style.overflow='hidden';
+new ResizeObserver(postH).observe(document.body);
+function rot(p,yaw,pitch){let[x,y,z]=p;const cy=Math.cos(yaw),sy=Math.sin(yaw);[x,y]=[cy*x-sy*y,sy*x+cy*y];const cp=Math.cos(pitch),sp=Math.sin(pitch);[y,z]=[cp*y-sp*z,sp*y+cp*z];return[x,y,z]}
+
+const PI=Math.PI,TAU=2*PI;
+const lat=document.getElementById('lat'),tor=document.getElementById('tor'),fold=document.getElementById('fold');
+let k=[1.3,0.8],yaw=0.35,pitch=1.05;
+const wrap=v=>((v+PI)%TAU+TAU)%TAU-PI;
+
+function arrow(g,x1,y1,x2,y2,c){g.strokeStyle=c;g.fillStyle=c;g.lineWidth=1.5;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();const a=Math.atan2(y2-y1,x2-x1),s=8;g.beginPath();g.moveTo(x2,y2);g.lineTo(x2-s*Math.cos(a-0.4),y2-s*Math.sin(a-0.4));g.lineTo(x2-s*Math.cos(a+0.4),y2-s*Math.sin(a+0.4));g.closePath();g.fill()}
+function latG(w,h){const side=Math.min(w-20,h-20);return{side,x0:(w-side)/2,y0:(h-side)/2}}
+
+function drawLat(){
+  const[g,w,h]=prep(lat);const{side,x0,y0}=latG(w,h);
+  const X=v=>x0+(v+3*PI)/(6*PI)*side,Y=v=>y0+(3*PI-v)/(6*PI)*side;
+  const fg=css('--fg'),sec=css('--sec'),line=css('--line'),warm=css('--warm'),cool=css('--cool'),acc=css('--accent');
+  g.strokeStyle=line;g.lineWidth=1;
+  for(const v of[-3,-1,1,3]){g.beginPath();g.moveTo(X(v*PI),Y(-3*PI));g.lineTo(X(v*PI),Y(3*PI));g.moveTo(X(-3*PI),Y(v*PI));g.lineTo(X(3*PI),Y(v*PI));g.stroke()}
+  g.lineWidth=3;g.strokeStyle=warm;g.beginPath();g.moveTo(X(-PI),Y(-PI));g.lineTo(X(-PI),Y(PI));g.moveTo(X(PI),Y(-PI));g.lineTo(X(PI),Y(PI));g.stroke();
+  g.strokeStyle=cool;g.beginPath();g.moveTo(X(-PI),Y(-PI));g.lineTo(X(PI),Y(-PI));g.moveTo(X(-PI),Y(PI));g.lineTo(X(PI),Y(PI));g.stroke();
+  arrow(g,X(0),Y(0),X(2*PI)-5,Y(0),sec);arrow(g,X(0),Y(0),X(0),Y(2*PI)+5,sec);
+  g.fillStyle=fg;for(const a of[-2,0,2])for(const b of[-2,0,2]){g.beginPath();g.arc(X(a*PI),Y(b*PI),3,0,TAU);g.fill()}
+  g.font='12px '+css('--font');g.fillStyle=sec;
+  g.fillText('b₁',X(1.4*PI),Y(0)-7);g.fillText('b₂',X(0)+7,Y(1.5*PI));g.fillText('BZ',X(-PI)+6,Y(PI)+16);
+  const kb=[wrap(k[0]),wrap(k[1])];g.strokeStyle=acc;g.lineWidth=1.5;
+  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){g.beginPath();g.arc(X(kb[0]+a*TAU),Y(kb[1]+b*TAU),5,0,TAU);g.stroke()}
+  g.fillStyle=acc;g.beginPath();g.arc(X(k[0]),Y(k[1]),6,0,TAU);g.fill();
+  g.fillStyle=fg;g.fillText('k',X(k[0])+9,Y(k[1])-7);
+}
+
+const Lu=TAU,Lv=TAU*0.4;
+function sheet(u,v,s1,s2){
+  let y,z;
+  if(s1<1e-3){y=(v-.5)*Lv;z=0}else{const r=Lv/(TAU*s1),th=(v-.5)*TAU*s1;y=r*Math.sin(th);z=r*(1-Math.cos(th))}
+  let X,Z;
+  if(s2<1e-3){X=(u-.5)*Lu;Z=z}else{const R=Lu/(TAU*s2),ps=(u-.5)*TAU*s2;X=(R+z)*Math.sin(ps);Z=(R+z)*Math.cos(ps)-R}
+  return[X,Z,y];
+}
+
+function drawTor(){
+  const[g,w,h]=prep(tor);const t=+fold.value,s1=Math.min(1,2*t),s2=Math.max(0,2*t-1);
+  const muted=css('--muted'),warm=css('--warm'),cool=css('--cool'),acc=css('--accent');
+  const NU=24,NV=12,SU=96,SV=48,segs=[];
+  for(let i=0;i<=NU;i++){const u=i/NU,e=i==0||i==NU;for(let j=0;j<SV;j++)segs.push([sheet(u,j/SV,s1,s2),sheet(u,(j+1)/SV,s1,s2),e?warm:muted,e?2.5:0.6])}
+  for(let j=0;j<=NV;j++){const v=j/NV,e=j==0||j==NV;for(let i=0;i<SU;i++)segs.push([sheet(i/SU,v,s1,s2),sheet((i+1)/SU,v,s1,s2),e?cool:muted,e?2.5:0.6])}
+  const R=p=>rot(p,yaw,pitch);const pts=segs.map(s=>[R(s[0]),R(s[1])]);
+  let mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+  for(const[a,b]of pts)for(const q of[a,b]){if(q[0]<mnx)mnx=q[0];if(q[0]>mxx)mxx=q[0];if(q[1]<mny)mny=q[1];if(q[1]>mxy)mxy=q[1]}
+  const sc=Math.min((w-28)/(mxx-mnx||1),(h-28)/(mxy-mny||1)),cx=w/2-(mnx+mxx)/2*sc,cy=h/2+(mny+mxy)/2*sc;
+  const S=q=>[cx+q[0]*sc,cy-q[1]*sc];
+  const kb=[wrap(k[0]),wrap(k[1])],kp=R(sheet((kb[0]+PI)/TAU,(kb[1]+PI)/TAU,s1,s2));
+  const items=pts.map((p,i)=>({z:(p[0][2]+p[1][2])/2,f:()=>{const a=S(p[0]),b=S(p[1]);g.strokeStyle=segs[i][2];g.lineWidth=segs[i][3];g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke()}}));
+  items.push({z:kp[2]+0.02,f:()=>{const a=S(kp);g.fillStyle=acc;g.beginPath();g.arc(a[0],a[1],6,0,TAU);g.fill()}});
+  items.sort((a,b)=>a.z-b.z);let z0=1e9,z1=-1e9;for(const o of items){if(o.z<z0)z0=o.z;if(o.z>z1)z1=o.z}
+  for(const o of items){g.globalAlpha=0.2+0.8*(o.z-z0)/(z1-z0+1e-9);o.f()}g.globalAlpha=1;
+  document.getElementById('foldv').textContent=Math.round(t*100)+'%';
+  document.getElementById('note').textContent=t<0.01?'Flat Brillouin zone. Drag k: every k + G (rings) is the same state label, so opposite edges are the same edge.'
+    :t<0.5?'Gluing the blue edges (k_y ~ k_y + |b₂|) rolls the zone into a cylinder.'
+    :t<0.99?'Gluing the coral edges (k_x ~ k_x + |b₁|) bends the cylinder into a torus.'
+    :'The Brillouin zone is a torus T². Drag k on the left to move it on the torus; drag here to rotate.';
+}
+
+function draw(){drawLat();drawTor()}
+let dl=false;
+function moveK(e){const r=lat.getBoundingClientRect();const{side,x0,y0}=latG(r.width,r.height);const cl=v=>Math.max(-3*PI+1e-6,Math.min(3*PI-1e-6,v));k=[cl((e.clientX-r.left-x0)/side*6*PI-3*PI),cl(3*PI-(e.clientY-r.top-y0)/side*6*PI)];draw()}
+lat.addEventListener('pointerdown',e=>{dl=true;lat.setPointerCapture(e.pointerId);moveK(e)});
+lat.addEventListener('pointermove',e=>{if(dl)moveK(e)});
+lat.addEventListener('pointerup',()=>dl=false);
+let dr=null;
+tor.addEventListener('pointerdown',e=>{dr=[e.clientX,e.clientY];tor.setPointerCapture(e.pointerId)});
+tor.addEventListener('pointermove',e=>{if(!dr)return;yaw-=(e.clientX-dr[0])*0.01;pitch=Math.max(0.1,Math.min(2.9,pitch-(e.clientY-dr[1])*0.01));dr=[e.clientX,e.clientY];drawTor()});
+tor.addEventListener('pointerup',()=>dr=null);
+fold.addEventListener('input',drawTor);
+addEventListener('resize',()=>{draw();postH()});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+draw();postH();
+</script>
+</body>
+</html>

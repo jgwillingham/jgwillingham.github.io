@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leapfrogging on the Yee grid</title>
+<style>
+:root{--fg:#2C2C2A;--sec:#5F5E5A;--muted:#888780;--line:#D3D1C7;--accent:#1D9E75;--warm:#D85A30;--cool:#378ADD;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441}}
+:root[data-theme="dark"]{--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441}
+html,body{margin:0;background:transparent;color:var(--fg);font:14px/1.5 var(--font)}
+.viz{max-width:760px;margin:0 auto;padding:12px 10px}
+canvas{display:block;width:100%;touch-action:none}
+#grid{cursor:crosshair}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;font-size:12px;color:var(--sec);margin:6px 0 4px}
+.legend>span{display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:28px;height:8px;border-radius:4px;background:linear-gradient(90deg,#378ADD,var(--line),#D85A30)}
+.legend .ar{color:var(--accent);font-weight:600}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;color:var(--sec);margin-top:8px}
+button{font:inherit;font-size:13px;color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:6px;padding:3px 12px;cursor:pointer}
+button:hover{border-color:var(--sec)}
+.row label{margin-left:6px}
+.row input[type=range]{flex:1;min-width:0;max-width:200px;accent-color:var(--accent)}
+.out{min-width:72px;font-variant-numeric:tabular-nums}
+.note{color:var(--sec);font-size:13px;margin-top:6px;min-height:1.5em}
+</style>
+</head>
+<body>
+<div class="viz" role="figure" aria-label="Interactive figure: a two-dimensional slice of the Yee grid. E_z sits on grid nodes and H_x, H_y on edge midpoints. The simulation advances in half steps, alternately updating H from the curl of E and E from the curl of H.">
+  <canvas id="grid" aria-label="Yee grid with E_z on nodes and H arrows on edge midpoints; hover a node to see its stencil, click to add a pulse"></canvas>
+  <div class="legend">
+    <span><i class="sw"></i><span>E<sub>z</sub> on nodes (into / out of page)</span></span>
+    <span><i class="ar">→</i><span>H<sub>x</sub>, H<sub>y</sub> on edge midpoints</span></span>
+  </div>
+  <canvas id="time" style="height:78px" aria-label="Timeline: E is known at whole time steps and H at half steps; the zigzag shows the leapfrog order of updates"></canvas>
+  <div class="row">
+    <button id="play">Pause</button><button id="step">Half step</button><button id="reset">Reset</button>
+    <label for="spd">Speed</label><input id="spd" type="range" min="0" max="4" step="1" value="1"><span class="out" id="spdv"></span>
+  </div>
+  <div class="note" id="note"></div>
+  <div class="note" id="hint"></div>
+</div>
+<script>
+const P=new URLSearchParams(location.search);if(P.get('theme'))document.documentElement.dataset.theme=P.get('theme');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function prep(c){const r=c.getBoundingClientRect(),q=window.devicePixelRatio||1;c.width=Math.max(1,Math.round(r.width*q));c.height=Math.max(1,Math.round(r.height*q));const g=c.getContext('2d');g.setTransform(q,0,0,q,0,0);return[g,r.width,r.height]}
+function postH(){if(window.parent!==window)window.parent.postMessage({type:'viz-resize',height:document.documentElement.scrollHeight},'*')}
+if(window.parent!==window)document.documentElement.style.overflow='hidden';
+new ResizeObserver(postH).observe(document.body);
+const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
+const mix=(a,b,t)=>'rgb('+a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')+')';
+
+// 2D TMz Yee grid in normalized units (c = Δx = 1): Ez on nodes (i,j), Hx on (i, j+½), Hy on (i+½, j).
+// S = cΔt/Δx is the Courant number (2D stability needs S ≤ 1/√2). Walls are PEC (Ez = 0).
+const NX=32,NY=16,S=0.5,TAU=2*Math.PI;
+const zeros=(a,b)=>Array.from({length:a},()=>new Float64Array(b));
+let Ez,Hx,Hy,h=0;  // h = number of half steps taken
+function pulse(ci,cj,amp){for(let i=1;i<NX;i++)for(let j=1;j<NY;j++)Ez[i][j]+=amp*Math.exp(-((i-ci)**2+(j-cj)**2)/(2*1.4**2))}
+function reset(){Ez=zeros(NX+1,NY+1);Hx=zeros(NX+1,NY);Hy=zeros(NX,NY+1);h=0;pulse(NX/2,NY/2,1)}
+function half(){
+  if(h%2===0){  // Faraday: H^{n+½} = H^{n-½} − S curl E^n
+    for(let i=0;i<=NX;i++)for(let j=0;j<NY;j++)Hx[i][j]-=S*(Ez[i][j+1]-Ez[i][j]);
+    for(let i=0;i<NX;i++)for(let j=0;j<=NY;j++)Hy[i][j]+=S*(Ez[i+1][j]-Ez[i][j]);
+  }else{        // Ampere: E^{n+1} = E^n + S curl H^{n+½}
+    for(let i=1;i<NX;i++)for(let j=1;j<NY;j++)Ez[i][j]+=S*((Hy[i][j]-Hy[i-1][j])-(Hx[i][j]-Hx[i][j-1]));
+  }
+  h++;
+}
+
+const G=document.getElementById('grid'),TL=document.getElementById('time');
+const SPEEDS=[2,5,12,30,60],spd=document.getElementById('spd');
+let playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,hov=null;
+const half_=t=>{const n=Math.floor(t);return(n?n:'')+'½'};
+
+function drawGrid(){
+  const W=G.getBoundingClientRect().width;G.style.height=(W*(NY+1)/(NX+1))+'px';
+  const[g,w]=prep(G),cell=w/(NX+1);
+  const X=i=>cell*(i+0.5),Y=j=>cell*(NY-j+0.5);
+  const base=isDark()?[95,95,90]:[205,203,195],warm=[216,90,48],cool=[55,138,221],acc=css('--accent');
+  const dim=!playing||SPEEDS[+spd.value]<=5,justE=h>0&&h%2===0,justH=h%2===1;
+  const aE=dim&&justH?0.35:1,aH=dim&&justE?0.35:1;
+  g.strokeStyle=css('--line');g.lineWidth=1;g.beginPath();
+  for(let i=0;i<=NX;i++){g.moveTo(X(i),Y(0));g.lineTo(X(i),Y(NY))}
+  for(let j=0;j<=NY;j++){g.moveTo(X(0),Y(j));g.lineTo(X(NX),Y(j))}
+  g.stroke();
+  g.strokeStyle=css('--sec');g.lineWidth=2;g.strokeRect(X(0),Y(NY),X(NX)-X(0),Y(0)-Y(NY));
+  // E_z on nodes
+  g.globalAlpha=aE;
+  for(let i=0;i<=NX;i++)for(let j=0;j<=NY;j++){const v=Ez[i][j],t=Math.min(1,Math.sqrt(Math.abs(v)/0.25));
+    g.fillStyle=mix(base,v>=0?warm:cool,t);g.beginPath();g.arc(X(i),Y(j),Math.max(1.5,cell*(0.1+0.18*t)),0,TAU);g.fill()}
+  // H on edge midpoints
+  g.globalAlpha=aH;g.strokeStyle=acc;g.fillStyle=acc;g.lineWidth=Math.max(1,cell*0.07);
+  const arrow=(x,y,dx,dy)=>{const L=Math.hypot(dx,dy);if(L<1.5)return;g.beginPath();g.moveTo(x-dx/2,y-dy/2);g.lineTo(x+dx/2,y+dy/2);g.stroke();
+    const ux=dx/L,uy=dy/L,s=Math.min(L*0.6,cell*0.22),ex=x+dx/2,ey=y+dy/2;g.beginPath();g.moveTo(ex,ey);g.lineTo(ex-s*ux-s*0.55*uy,ey-s*uy+s*0.55*ux);g.lineTo(ex-s*ux+s*0.55*uy,ey-s*uy-s*0.55*ux);g.closePath();g.fill()};
+  const len=v=>Math.sign(v)*Math.min(1,Math.sqrt(Math.abs(v)/0.25))*0.42*cell;
+  for(let i=0;i<=NX;i++)for(let j=0;j<NY;j++)arrow(X(i),Y(j+0.5),len(Hx[i][j]),0);
+  for(let i=0;i<NX;i++)for(let j=0;j<=NY;j++)arrow(X(i+0.5),Y(j),0,-len(Hy[i][j]));
+  g.globalAlpha=1;
+  // Update stencil for the hovered node: E_z from the circulation of the four surrounding H values
+  if(hov){const[i,j]=hov;
+    g.setLineDash([4,3]);g.strokeStyle=css('--fg');g.lineWidth=1;g.strokeRect(X(i-0.5),Y(j+0.5),cell,cell);g.setLineDash([]);
+    g.lineWidth=2;g.beginPath();g.arc(X(i),Y(j),cell*0.32,0,TAU);g.stroke();
+    g.strokeStyle=acc;for(const[a,b]of[[i+0.5,j],[i-0.5,j],[i,j+0.5],[i,j-0.5]]){g.beginPath();g.arc(X(a),Y(b),cell*0.26,0,TAU);g.stroke()}}
+}
+
+function drawTime(){
+  const[g,w,hh]=prep(TL),fg=css('--fg'),sec=css('--sec'),acc=css('--accent'),font=css('--font');
+  const now=h/2,lastE=Math.floor(now),lastH=h%2?now:now-0.5,t0=now-3.6,span=5.8;
+  const x=t=>40+(t-t0)/span*(w-52),yE=20,yH=50;
+  g.font='600 13px '+font;g.textBaseline='middle';g.fillStyle=fg;g.fillText('E',10,yE);g.fillStyle=acc;g.fillText('H',10,yH);
+  const pts=[];for(let k=Math.ceil(2*t0);k/2<=t0+span;k++){const t=k/2;if(t<-0.5)continue;pts.push({t,isE:k%2===0})}
+  // Zigzag: E^n → H^{n+½} → E^{n+1}
+  g.lineWidth=1.25;
+  for(let a=0;a<pts.length-1;a++){const p=pts[a],q=pts[a+1],done=q.t<=now;
+    g.strokeStyle=done?sec:css('--line');g.setLineDash(done?[]:[3,3]);g.beginPath();g.moveTo(x(p.t),p.isE?yE:yH);g.lineTo(x(q.t),q.isE?yE:yH);g.stroke()}
+  g.setLineDash([]);
+  for(const p of pts){const done=p.isE?p.t<=lastE:p.t<=lastH,c=p.isE?fg:acc,y=p.isE?yE:yH;
+    g.beginPath();g.arc(x(p.t),y,5,0,TAU);if(done){g.fillStyle=c;g.fill()}else{g.strokeStyle=c;g.lineWidth=1.25;g.stroke()}
+    if(p.t===now){g.strokeStyle=c;g.lineWidth=1.5;g.beginPath();g.arc(x(p.t),y,9,0,TAU);g.stroke()}}
+  g.font='11px '+font;g.fillStyle=sec;g.textAlign='center';
+  for(const p of pts)if(p.isE&&p.t>=0)g.fillText(p.t+'Δt',x(p.t),yH+20);
+  g.textAlign='left';
+}
+
+function drawAll(){
+  drawGrid();drawTime();
+  const n=Math.floor(h/2);
+  document.getElementById('note').textContent=h===0?'t = 0: an initial E pulse, with H starting at zero (at t = −½Δt). Next: update H.'
+    :h%2?'Updated H to t = '+half_(h/2)+'Δt from the curl of E at t = '+n+'Δt. Next: update E.'
+    :'Updated E to t = '+n+'Δt from the curl of H at t = '+half_(n-1)+'Δt. Next: update H.';
+  document.getElementById('hint').textContent=hov?'Ringed: Ez at this node is updated from the circulation of the four highlighted H values around it, a discrete curl.'
+    :'Hover a node to see its update stencil. Click to add a pulse.';
+  document.getElementById('spdv').textContent=SPEEDS[+spd.value]+' half steps/s';
+  document.getElementById('play').textContent=playing?'Pause':'Play';
+}
+
+let acc=0,last=null,visible=true;
+new IntersectionObserver(e=>{visible=e[0].isIntersecting}).observe(G);
+function frame(ts){
+  if(playing&&visible){if(last!==null){acc+=(ts-last)/1000*SPEEDS[+spd.value];let k=0;while(acc>=1&&k<8){half();acc-=1;k++}if(acc>=1)acc=0;if(k)drawAll()}last=ts}
+  else last=null;
+  requestAnimationFrame(frame);
+}
+function nodeAt(e){const rc=G.getBoundingClientRect(),cell=rc.width/(NX+1);const i=Math.round((e.clientX-rc.left)/cell-0.5),j=Math.round(NY+0.5-(e.clientY-rc.top)/cell);return i>=1&&i<NX&&j>=1&&j<NY?[i,j]:null}
+G.addEventListener('pointermove',e=>{const n=nodeAt(e);if(String(n)!==String(hov)){hov=n;drawAll()}});
+G.addEventListener('pointerleave',()=>{hov=null;drawAll()});
+G.addEventListener('pointerdown',e=>{const n=nodeAt(e);if(n){pulse(n[0],n[1],1);hov=n;drawAll()}});
+document.getElementById('play').addEventListener('click',()=>{playing=!playing;drawAll()});
+document.getElementById('step').addEventListener('click',()=>{playing=false;half();drawAll()});
+document.getElementById('reset').addEventListener('click',()=>{reset();drawAll()});
+spd.addEventListener('input',drawAll);
+addEventListener('resize',()=>{drawAll();postH()});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+reset();drawAll();postH();requestAnimationFrame(frame);
+</script>
+</body>
+</html>

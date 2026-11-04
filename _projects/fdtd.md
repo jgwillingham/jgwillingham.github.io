@@ -3,7 +3,7 @@ title: FDTD on a GPU
 category: Computational Physics
 summary: >-
   Finite-Difference Time Domain (FDTD) solves Maxwell's equations by leapfrogging spacetime-staggered electric and magnetic fields. Here I write a GPU-accelerated solver using PyTorch
-context: Developing an FDTD solver and training a PINN
+context: Developing a GPU-accelerated numerical electrodynamics solver
 image: /assets/img/yee_algorithm.png
 image_alt: Leapfrogging in the Yee algorithm
 featured: true
@@ -29,16 +29,14 @@ The essential steps of FDTD are known as the **Yee algorithm** and they consist 
 - Evaluate the E-field one time step into the future
 - Repeat the past 2 steps until the desired duration is captured
 
-The algorithm is straight forward. To get a better feel for it, suppose we replace only the time derivatives with central finite differences. We can then solve for the future fields to write update equations. But in FDTD we do not evaluate both equations at the same time. If we take the central difference in Faraday's law at time $$t$$, for Ampere's law, the difference is at time $$t+\Delta_t/2$$. The result is
+The algorithm is straight forward. To get a better feel for it, suppose we replace only the time derivatives with central finite differences. We can then solve for the future fields to write update equations. But in FDTD we do not evaluate both equations at the same time. If we take the central difference in Faraday's law at time $$t$$, then for Ampere's law, the difference is at time $$t+\Delta_t/2$$. The result is
 
 $$ H^{t+\Delta_t/2}\approx H^{t-\Delta_t/2} - \frac{\Delta_t}{\mu}\nabla\times E^t $$
 
 $$ E^{t+\Delta_t} \approx E^t + \frac{\Delta_t}{\varepsilon}\nabla\times H^{t+\Delta_t/2} \:-\:\frac{\Delta_t}{\varepsilon} j^{t+\Delta_t/2}$$
 
-From this form it is evident that if we have the E-field at time $$t$$ and the H-field at time $$t-\Delta_t/2$$, we can exactly calculate $$H^{t+\Delta_t/2}$$ with Faraday's law. Then that value can be used in Amp\`ere's law to compute $$E^{t+\Delta_t}$$. This **leapfrog** procedure can be iterated as many times as needed to evolve the fields forward in time. This is the basic idea of FDTD.
+From this form it is evident that if we have the E-field at time $$t$$ and the H-field at time $$t-\Delta_t/2$$, we can calculate $$H^{t+\Delta_t/2}$$ with Faraday's law. Then that value can be used in Ampere's law to compute $$E^{t+\Delta_t}$$. This **leapfrog** procedure can be iterated as many times as needed to evolve the fields forward in time. This is the basic idea of FDTD.
 
-
-### The Yee Cell and Update Equations
 
 To derive the appropariate update equations which increment the fields in time, we must first put everything on a grid, discretizing space and time. Positions in space will be written $$x=m\Delta_x$$ where $$\Delta_x$$ is the grid spacing and $$m\in\mathbb{Z}^3$$ contains three integers indicating the grid location. Similarly, every time is written $$t=n\Delta_t$$ for some integer $$n$$ and time step $$\Delta_t$$. In this discretized setting, it is convenient to use a more concise notation.
 
@@ -54,7 +52,7 @@ $$ H_i^{n+\frac{1}{2}}[m]\approx H_i^{n-\frac{1}{2}}[m]\: -\:\frac{1}{\mu}\frac{
 
 Observe that the H-field appears in this equation as $$H_i[m]$$, i.e. it is computed at each node $$x=m$$ in the grid. The E-field on the other hand appears on the center of grid edges: $$E_k[m\pm\hat{j}/2]$$. When Ampere's law is written on the grid, the reverse is found --- the E-field appears on each node, $$E_i[m]$$, and the H-field appears on the edges, $$H_k[m\pm\hat{j}/2]$$. Since Faraday's law and Ampere's law are computing fields at different points, this prevents us from being able to directly use the result from one equation in the other. 
 
-To resolve this problem, we must shift where we are computing each field component. The E-field components will be computed along edges of the grid while H-field components will be computed on faces of the grid. This pattern is known as the **Yee cell** or Yee lattice and the resulting update equations are:
+To resolve this problem, we must shift where we are computing each field component. The E-field components will be computed along edges of the grid while H-field components will be computed on faces of the grid. This pattern is known as the **Yee cell** or Yee lattice and the resulting update equations are (with $$i,j,k$$ all unequal )
 
 $$ H_i^{n+\frac{1}{2}}[m+(\hat{j} +\hat{k})/2] \:\approx\: H_i^{n-\frac{1}{2}}[m+(\hat{j} +\hat{k})/2] \qquad\qquad\qquad\qquad\qquad\qquad\qquad$$
 
@@ -66,33 +64,30 @@ $$\qquad\qquad\qquad\qquad+\frac{1}{\varepsilon}\frac{\Delta_t}{\Delta_x}\epsilo
 
 $$\;-\frac{\Delta_t}{\varepsilon} j_i^{n+\frac{1}{2}}[m+\hat{i}/2]\qquad\qquad\qquad\qquad\qquad$$
 
-Once we shift to the Yee lattice, the update equations and the rest of FDTD fall out naturally. Taking central finite differences immediately relates H-fields on faces to E-fields on edges and vice versa. But as a consequence of the Yee lattice, not only are the E and H fields defined at different points in time, but all 6 values $$E_x,E_y,E_z,H_x,H_y,H_z$$ are computed at different positions in space too. This means that to compute the full field vector at any single point in spacetime, the results from FDTD must be **interpolated**.
+Once we shift to the Yee lattice, the update equations and the rest of FDTD fall out naturally. Taking central finite differences immediately relates H-fields on faces to E-fields on edges and vice versa. But as a consequence of the Yee lattice, not only are the E and H fields defined at different points in time, but all 6 values $$E_x,E_y,E_z,H_x,H_y,H_z$$ are computed at different positions in space too. This means that to compute the full field vector at any single point in spacetime, the results from FDTD must be **interpolated**. 
+
+{% include viz.html src="/assets/viz/fdtd-yee-leapfrog.html" title="Leapfrogging on the Yee grid" caption="A 2D slice of the Yee grid (TMz polarization): Ez lives on the nodes and Hx, Hy on the edge midpoints. Each half step updates one field from the curl of the other, so E is known at whole time steps and H at half steps. The walls are perfect conductors." height=560 %}
+
+## Lossy Media + Conductivity
+
+In electromagnetics, the current density $$j$$ can be treated as either a source term or as an induced current. As a source term, it is known and controlled. As an induced current, it is a priori unknown and must be computed as a consequence of the local fields and material properties. In general we will want to simulate scenarios which both have source terms and induced currents so we will need both. The standard model for induced currents is Ohm's law $$ j = \sigma E $$ where $$  \sigma$$ is the model conductivity tensor. Including this alongside a source current, we have $$ j = j_{src} + \sigma E $$. So then Ampere's law becomes
+
+$$ \nabla\times H = j_{src} + \sigma E + \varepsilon\frac{\partial E}{\partial t}$$
+
+Replacing the time-derivative with a central difference around time $$n+\frac{1}{2}$$ as before, we find an update equation for the E-field which looks like
+
+$$ E^{n+1} \approx E^n  \:-\: \frac{\Delta_t \sigma}{\varepsilon}E^{n+\frac{1}{2}}\;+\; \frac{\Delta_t}{\varepsilon}\bigg[\nabla\times H^{n+\frac{1}{2}} \:-\: j_{src}^{n+\frac{1}{2}} \bigg] $$
+
+This presents a problem. Now there is an E-field term appearing at time $$n+\frac{1}{2}$$ unlike anywhere else in our equations. To force this back into our mold where the E-field is defined at integer times, we can replace $$E^{n+\frac{1}{2}}$$ with an average of the E-fields we do have $$ E^{n+\frac{1}{2}} \approx (E^{n+1} + E^{n})/2 $$. Plugging this back into the update equation, we can rearrange to find
+
+$$ E^{n+1} \approx \left(\frac{1 - \frac{\Delta_t \sigma}{2\varepsilon}}{ 1  + \frac{\Delta_t\sigma}{2\varepsilon}}\right)E^n \;+\;\frac{\Delta_t/\varepsilon}{1  + \frac{\Delta_t\sigma}{2\varepsilon}} \bigg[\nabla\times H^{n+\frac{1}{2}} \:-\:j_{src}^{n+\frac{1}{2}}\bigg]  $$
 
 
-## Dispersion and Stability
 
-The algorithm as discussed so far is fully valid but there are details that must be touched upon. It seems obvious that as $$\Delta_x$$ and $$\Delta_t$$ tend toward zero, we get a better and better approximation to the true solution.However, what might not be obvious at first is that we cannot (or perhaps should not) treat the step sizes independently. One important consequence of a poor choice of step size is the algorithm can become unstable. This stems from the fact that the Yee lattice is a dispersive medium just by virtue of being discrete. We will prove this now. 
-	
-As is well known, solutions to Maxwell's equations are also solutions to the wave equation:
+## Tensor Operations
 
-$$ \frac{\partial^2 E}{\partial t^2} - c^2\nabla^2E = 0 $$
+Keep in mind that in our simulation domain, the conductivity, permittivity, and permeability will all be material dependent (and hence spatially dependent) properties. In memory, they must be stored as tensors just like the field components. 
 
-In continuous spacetime, this can be solved with a plane wave of the form $$E(x,t)=e^{i(k\cdot x- \omega t)}\hat{z}$$. Plugging this into the wave equation yields the classic dispersion(less) relation $$ \omega = c\|k\| $$.Things become a bit different when we move onto the lattice. The wave equation can be replaced with second-order central finite differences so that
+Looking at the FDTD update equations, we can see that each term in the curl has the generic form 
 
-$$ \frac{E_z^{n+1}[m] - 2E_z^n[m] + E_z^{n-1}[m]}{\Delta_t^2} = \frac{c^2}{\Delta_x^2}\sum_{i=x,y,z}\left[ E_z^n[m+\hat{i}] - 2E_z^n[m] + E_z^n[m - \hat{i}] \right]$$
-
-And the $$z$$-component of the plane wave becomes
-
-$$ E_z^n[m] = e^{i(k\cdot m\Delta_x - \omega n\Delta_t)} $$
-
-Observe that the discretized plane wave has the following properties. When shifted in time, we get $$ E_z^{n+1}[m] = e^{-i\omega\Delta_t} E_z^n[m]$$ and similarly when shifted in space: $$ E_z^n[m + \hat{x}] = e^{ik_x\Delta_x} E_z^n[m]$$. Just as the continuous wave equation reduces to $$\omega^2=c^2\|k\|^2$$ for a plane wave, these shift identities and a couple trig identities can be used to show that the discrete wave equation reduces to the **lattice dispersion relation**:
-
-$$ \sin^2(\omega\Delta_t) = \frac{c^2\Delta_t^2}{\Delta_x^2} \left[\sin^2(k_x\Delta_x) + \sin^2(k_y\Delta_x) + \sin^2(k_z\Delta_x) \right]$$
-
-Now for stable wave solutions, we must have **real**-valued solutions $$\omega$$ for every $$k_x,k_y,k_z$$ in this equation. But the left side is clearly bounded from above by 1 so if the right exceeds 1, then no real solution $$\omega$$ exists --- we get frequencies with imaginary components leading to exponentially growing/decaying waves. In the maximum case where all the sines on the right are 1, this gives us a stability condition:
-
-$$ \frac{c^2\Delta_t^2}{\Delta_x^2} 3 \leq 1 $$
-
-Defining the **Courant number** $$S\equiv c\Delta_t/\Delta_x$$, this becomes
-
-$$ S\leq \frac{1}{\sqrt{3}} $$
+$$ F^{n+1}_i = F^n_i + \sum_i C_i(G_i - H_i) $$

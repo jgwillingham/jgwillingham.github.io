@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Renormalization decimation</title>
+<style>
+:root{--fg:#2C2C2A;--sec:#5F5E5A;--muted:#888780;--line:#D3D1C7;--accent:#1D9E75;--warm:#D85A30;--cool:#378ADD;--heat:#0F6E56;--surf:#FFFFFF;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441;--heat:#5DCAA5;--surf:#2C2C2A}}
+:root[data-theme="dark"]{--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441;--heat:#5DCAA5;--surf:#2C2C2A}
+html,body{margin:0;background:transparent;color:var(--fg);font:14px/1.5 var(--font)}
+.viz{max-width:760px;margin:0 auto;padding:12px 10px}
+canvas{display:block;width:100%}
+#plot{cursor:crosshair}
+.grid2{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:620px){.grid2{grid-template-columns:3fr 2fr}}
+.row{display:flex;align-items:center;gap:10px;color:var(--sec);margin-top:10px}
+.row label{min-width:96px}
+.row input[type=range]{flex:1;min-width:0;max-width:280px;accent-color:var(--accent)}
+.out{min-width:56px;text-align:right;font-variant-numeric:tabular-nums}
+.note{color:var(--sec);font-size:13px;margin-top:6px;min-height:3em}
+.legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sec);margin-top:6px;flex-wrap:wrap}
+.legend .bar{flex:1;max-width:160px;min-width:80px;height:6px;border-radius:3px;background:linear-gradient(90deg,transparent,var(--heat))}
+.legend .dash{display:inline-block;width:18px;border-top:1.5px dashed var(--muted);vertical-align:middle;margin-left:10px}
+</style>
+</head>
+<body>
+<div class="viz" role="figure" aria-label="Interactive figure: renormalization decimation for the surface of a two-dimensional Chern insulator. Each iteration removes every other remaining row of the lattice; the surface spectral function as a function of momentum along the surface and energy converges to the semi-infinite result, which shows a chiral edge state crossing the bulk gap when the Chern number is nonzero.">
+  <div class="grid2">
+    <canvas id="plot" style="height:290px" aria-label="Heatmap of the surface spectral function versus momentum along the surface and energy, at the current iteration; hover for values"></canvas>
+    <canvas id="lat" style="height:290px" aria-label="Rows of the semi-infinite lattice that survive after n decimation steps, with their effective couplings"></canvas>
+  </div>
+  <div class="legend"><span>ρₛ low</span><span class="bar"></span><span>high (log scale)</span><span class="dash"></span><span>bulk gap edges</span></div>
+  <canvas id="conv" style="height:120px;margin-top:6px" aria-label="Size of the remaining inter-row coupling versus iteration, on a log scale"></canvas>
+  <div class="row"><label for="n">Iteration n</label><input id="n" type="range" min="0" max="12" step="1" value="3"><span class="out" id="nv"></span></div>
+  <div class="row"><label for="m">Model parameter m</label><input id="m" type="range" min="-3" max="3" step="0.05" value="1"><span class="out" id="mv"></span></div>
+  <div class="note" id="note"></div>
+</div>
+<script>
+const P=new URLSearchParams(location.search);if(P.get('theme'))document.documentElement.dataset.theme=P.get('theme');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function prep(c){const r=c.getBoundingClientRect(),q=window.devicePixelRatio||1;c.width=Math.max(1,Math.round(r.width*q));c.height=Math.max(1,Math.round(r.height*q));const g=c.getContext('2d');g.setTransform(q,0,0,q,0,0);return[g,r.width,r.height]}
+function postH(){if(window.parent!==window)window.parent.postMessage({type:'viz-resize',height:document.documentElement.scrollHeight},'*')}
+if(window.parent!==window)document.documentElement.style.overflow='hidden';
+new ResizeObserver(postH).observe(document.body);
+
+const PI=Math.PI,TAU=2*PI,NMAX=12,NK=100,NE=120,EMIN=-4,EMAX=4,ETA=0.06;
+const PL=document.getElementById('plot'),LA=document.getElementById('lat'),CO=document.getElementById('conv'),NI=document.getElementById('n'),MI=document.getElementById('m');
+// complex numbers as [re, im]; 2x2 blocks as row-major [00, 01, 10, 11]
+const ca=(a,b)=>[a[0]+b[0],a[1]+b[1]],cs=(a,b)=>[a[0]-b[0],a[1]-b[1]],cm=(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]],neg=a=>[-a[0],-a[1]];
+const cd=(a,b)=>{const d=b[0]*b[0]+b[1]*b[1];return[(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d]};
+const mm=(X,Y)=>[ca(cm(X[0],Y[0]),cm(X[1],Y[2])),ca(cm(X[0],Y[1]),cm(X[1],Y[3])),ca(cm(X[2],Y[0]),cm(X[3],Y[2])),ca(cm(X[2],Y[1]),cm(X[3],Y[3]))];
+const madd=(X,Y)=>X.map((x,i)=>ca(x,Y[i]));
+function minv(X){const det=cs(cm(X[0],X[3]),cm(X[1],X[2]));return[cd(X[3],det),cd(neg(X[1]),det),cd(neg(X[2]),det),cd(X[0],det)]}
+const zmin=(z,X)=>[cs(z,X[0]),neg(X[1]),neg(X[2]),cs(z,X[3])];
+const mnorm=X=>Math.sqrt(X.reduce((s,x)=>s+x[0]*x[0]+x[1]*x[1],0));
+
+// QWZ model h(k) = (sin kx, sin ky, m + cos kx + cos ky), the same model as the Chern-number figure.
+// Rows of fixed y are the layers; k∥ = kx is conserved. Within a row: H_bulk = sin kx σx + (m + cos kx) σz.
+// Between rows: V† = H_{y,y+1} = (σz − iσy)/2, V = H_{y+1,y}. The surface row is H_s = H_bulk.
+const VD=[[0.5,0],[-0.5,0],[0.5,0],[-0.5,0]],VV=[[0.5,0],[0.5,0],[-0.5,0],[-0.5,0]];
+// Lopez Sancho iteration with alpha = V†, beta = V; records ρₛ and ‖V‖ after each step
+function decimate(kx,E,m,rho,an,idx){
+  const z=[E,ETA],s=Math.sin(kx),c=m+Math.cos(kx);let es=[[c,0],[s,0],[s,0],[-c,0]],e=es.slice(),a=VD,b=VV;
+  for(let n=0;n<=NMAX;n++){
+    const Gs=minv(zmin(z,es));rho[n][idx]=-(Gs[0][1]+Gs[3][1])/PI;an[n]=Math.max(an[n],mnorm(a));
+    if(n===NMAX)break;
+    const g=minv(zmin(z,e)),agb=mm(mm(a,g),b),bga=mm(mm(b,g),a);
+    es=madd(es,agb);e=madd(madd(e,agb),bga);a=mm(mm(a,g),a);b=mm(mm(b,g),b);
+  }
+}
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const om=(a,b,c)=>2*Math.atan2(dot(a,cr(b,c)),1+dot(a,b)+dot(b,c)+dot(c,a));
+function d(kx,ky,m){const x=Math.sin(kx),y=Math.sin(ky),z=m+Math.cos(kx)+Math.cos(ky),n=Math.hypot(x,y,z)||1;return[x/n,y/n,z/n]}
+function chern(m){const N=48,h=TAU/N;let s=0;for(let i=0;i<N;i++)for(let j=0;j<N;j++){const A=d(i*h,j*h,m),B=d((i+1)*h,j*h,m),C=d((i+1)*h,(j+1)*h,m),D=d(i*h,(j+1)*h,m);s+=om(A,B,C)+om(A,C,D)}return Math.round(s/(4*PI))}
+const kOf=i=>-PI+TAU*i/(NK-1),EOf=j=>EMAX-(EMAX-EMIN)*j/(NE-1);
+
+let D=null,hover=null;
+function compute(){
+  const m=+MI.value,rho=[...Array(NMAX+1)].map(()=>new Float32Array(NK*NE)),an=new Float64Array(NMAX+1);
+  for(let j=0;j<NE;j++)for(let i=0;i<NK;i++)decimate(kOf(i),EOf(j),m,rho,an,j*NK+i);
+  // projected bulk gap: smallest |h| over ky at each k∥
+  const gapE=new Float64Array(NK);for(let i=0;i<NK;i++){let lo=1e9;const kx=kOf(i);for(let t=0;t<200;t++){const ky=TAU*t/200;lo=Math.min(lo,Math.hypot(Math.sin(kx),Math.sin(ky),m+Math.cos(kx)+Math.cos(ky)))}gapE[i]=lo}
+  D={m,rho,an,gapE,C:chern(m),closed:Math.abs(Math.abs(m)-2)<0.03||Math.abs(m)<0.03};
+}
+
+function hexRGB(h){h=h.replace('#','');return[0,2,4].map(i=>parseInt(h.slice(i,i+2),16))}
+const LO=-2,HI=Math.log10(1/(PI*ETA));
+function drawPlot(n){
+  const[g,w,h]=prep(PL);const sec=css('--sec'),muted=css('--muted'),line=css('--line'),font=css('--font');
+  const mg={l:34,r:8,t:22,b:30},pw=w-mg.l-mg.r,ph=h-mg.t-mg.b;
+  const off=document.createElement('canvas');off.width=NK;off.height=NE;const og=off.getContext('2d'),img=og.createImageData(NK,NE),[R,G,B]=hexRGB(css('--heat')),r=D.rho[n];
+  for(let p=0;p<NK*NE;p++){const t=Math.min(1,Math.max(0,(Math.log10(Math.max(r[p],1e-6))-LO)/(HI-LO)));img.data[4*p]=R;img.data[4*p+1]=G;img.data[4*p+2]=B;img.data[4*p+3]=Math.round(255*t)}
+  og.putImageData(img,0,0);g.imageSmoothingEnabled=true;g.drawImage(off,mg.l,mg.t,pw,ph);
+  const X=k=>mg.l+pw*(k+PI)/TAU,Y=E=>mg.t+ph*(EMAX-E)/(EMAX-EMIN);
+  // bulk gap edges
+  g.strokeStyle=muted;g.lineWidth=1.2;g.setLineDash([4,3]);
+  for(const sg of[1,-1]){g.beginPath();for(let i=0;i<NK;i++){const x=X(kOf(i)),y=Y(sg*D.gapE[i]);i?g.lineTo(x,y):g.moveTo(x,y)}g.stroke()}g.setLineDash([]);
+  g.strokeStyle=line;g.lineWidth=1;g.strokeRect(mg.l,mg.t,pw,ph);
+  g.fillStyle=sec;g.font='12px '+font;g.fillText('Surface spectral function ρₛ(k∥, E)',8,14);
+  g.textAlign='center';[[-PI,'−π'],[0,'0'],[PI,'π']].forEach(([k,s])=>g.fillText(s,X(k),h-mg.b+15));g.fillText('k∥',mg.l+pw/2,h-4);
+  g.textAlign='right';for(let E=-4;E<=4;E+=2)g.fillText(String(E).replace('-','−'),mg.l-5,Y(E)+4);g.textAlign='start';
+  if(hover){const{i,j}=hover,x=X(kOf(i)),y=Y(EOf(j));g.strokeStyle=sec;g.lineWidth=0.75;g.beginPath();g.moveTo(x,mg.t);g.lineTo(x,mg.t+ph);g.moveTo(mg.l,y);g.lineTo(mg.l+pw,y);g.stroke();
+    const txt=['k∥ = '+(kOf(i)/PI).toFixed(2)+'π','E = '+EOf(j).toFixed(2),'ρₛ = '+r[j*NK+i].toFixed(3)],bw=Math.max(...txt.map(s=>g.measureText(s).width))+14,bh=52;
+    let bx=x+10,by=y+10;if(bx+bw>w-2)bx=x-10-bw;if(by+bh>h-2)by=y-10-bh;
+    g.fillStyle=css('--surf');g.strokeStyle=line;g.beginPath();g.roundRect(bx,by,bw,bh,4);g.fill();g.stroke();g.fillStyle=css('--fg');txt.forEach((s,k)=>g.fillText(s,bx+7,by+16+k*15))}
+}
+
+function drawLattice(n){
+  const[g,w,h]=prep(LA);const sec=css('--sec'),line=css('--line'),acc=css('--accent'),warm=css('--warm'),font=css('--font');
+  const L=16,top=50,y=i=>top+i*(h-top-12)/L,x0=44,x1=w-58,cols=9,step=2**n;
+  const lr=Math.log10(Math.max(D.an[n],1e-15)/D.an[0]),t=Math.min(1,Math.max(0,1+lr/12));
+  g.fillStyle=sec;g.font='12px '+font;g.fillText('Rows of the lattice after n = '+n,8,14);g.fillText('each bond spans 2ⁿ = '+step+(step===1?' row':' rows')+', ‖V‖ ≈ '+D.an[n].toExponential(1),8,30);
+  g.save();g.beginPath();g.rect(0,top-8,w,h);g.clip();
+  g.strokeStyle=acc;g.lineWidth=0.6+3.4*t;g.globalAlpha=0.3+0.7*t;
+  for(let s=0;s<=L;s+=step){const ya=y(s),yb=y(s+step),bw=Math.min(6+0.3*(yb-ya),x0-6);g.beginPath();g.moveTo(x0,ya);g.quadraticCurveTo(x0-2*bw,(ya+yb)/2,x0,yb);g.stroke()}
+  g.restore();g.globalAlpha=1;
+  for(let i=0;i<=L;i++){const alive=i%step===0,col=i===0?warm:alive?acc:line,yy=y(i);
+    g.strokeStyle=col;g.lineWidth=alive?1.5:0.75;g.beginPath();g.moveTo(x0,yy);g.lineTo(x1,yy);g.stroke();
+    g.fillStyle=col;for(let c=0;c<cols;c++){g.beginPath();g.arc(x0+(x1-x0)*c/(cols-1),yy,alive?3:1.8,0,TAU);g.fill()}}
+  g.fillStyle=sec;const gap=y(step)-y(0);
+  for(let i=0;i<=L;i+=step)if(i===0||gap>=14)g.fillText(i===0?'surface':'row '+i,x1+8,y(i)+4);
+}
+
+function drawConv(n){
+  const[g,w,h]=prep(CO);const sec=css('--sec'),muted=css('--muted'),line=css('--line'),acc=css('--accent'),font=css('--font');
+  const mg={l:44,r:10,t:20,b:22},lo=-15,hi=Math.ceil(Math.log10(Math.max(...D.an))),X=k=>mg.l+(w-mg.l-mg.r)*k/NMAX,Y=v=>mg.t+(h-mg.t-mg.b)*(hi-Math.max(lo,Math.log10(Math.max(v,1e-16))))/(hi-lo);
+  g.strokeStyle=line;g.lineWidth=1;g.beginPath();g.moveTo(mg.l,mg.t);g.lineTo(mg.l,h-mg.b);g.lineTo(w-mg.r,h-mg.b);g.stroke();
+  g.fillStyle=sec;g.font='12px '+font;g.fillText('Largest remaining coupling ‖V‖ (log scale)',8,13);
+  const sup=p=>String(p).split('').map(c=>c==='-'?'⁻':'⁰¹²³⁴⁵⁶⁷⁸⁹'[c]).join('');
+  g.font='11px '+font;g.textAlign='right';for(const p of[hi,Math.round((hi+lo)/2),lo])g.fillText('10'+sup(p),mg.l-5,Y(10**p)+4);
+  g.textAlign='center';for(let k=0;k<=NMAX;k++)g.fillText(String(k),X(k),h-mg.b+14);g.textAlign='start';
+  g.strokeStyle=muted;g.beginPath();for(let k=0;k<=NMAX;k++)k?g.lineTo(X(k),Y(D.an[k])):g.moveTo(X(k),Y(D.an[k]));g.stroke();
+  for(let k=0;k<=NMAX;k++){g.fillStyle=k===n?acc:muted;g.beginPath();g.arc(X(k),Y(D.an[k]),k===n?5:2.5,0,TAU);g.fill()}
+}
+
+function draw(){
+  const n=+NI.value;document.getElementById('nv').textContent=n;document.getElementById('mv').textContent=D.m.toFixed(2);
+  drawPlot(n);drawLattice(n);drawConv(n);
+  const rows=2**n,done=D.an[n]<1e-6*D.an[0];
+  const it=done?'Converged after '+n+' steps: the surface row now behaves as if backed by a semi-infinite bulk.'
+    :'After '+n+(n===1?' step':' steps')+' the surface row has absorbed '+(rows-1)+' deeper '+(rows===2?'row':'rows')+', so ρₛ is the edge spectrum of a '+rows+'-row ribbon'+(n<4?', still split into discrete subbands.':'.');
+  const top=D.closed?'The bulk gap closes at this m, so the Chern number is not defined.'
+    :D.C?'The bulk has Chern number '+D.C+', and a single chiral edge state crosses the gap.'
+    :'The bulk has Chern number 0, and no edge state crosses the gap.';
+  document.getElementById('note').textContent=it+' '+top;
+}
+function at(e){const r=PL.getBoundingClientRect(),mg={l:34,r:8,t:22,b:30},u=(e.clientX-r.left-mg.l)/(r.width-mg.l-mg.r),v=(e.clientY-r.top-mg.t)/(r.height-mg.t-mg.b);
+  return u<0||u>1||v<0||v>1?null:{i:Math.round(u*(NK-1)),j:Math.round(v*(NE-1))}}
+PL.addEventListener('pointermove',e=>{hover=at(e);drawPlot(+NI.value)});
+PL.addEventListener('pointerleave',()=>{hover=null;drawPlot(+NI.value)});
+let pend=0;
+NI.addEventListener('input',draw);
+MI.addEventListener('input',()=>{if(pend)return;pend=requestAnimationFrame(()=>{pend=0;compute();draw()})});
+addEventListener('resize',()=>{draw();postH()});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+compute();draw();postH();
+</script>
+</body>
+</html>

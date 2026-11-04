@@ -1,0 +1,10 @@
+{%- comment -%}
+  Embed a static image with an optional caption (companion to viz.html).
+  Usage: {% include figure.html src="/assets/img/plot.png" alt="Short description" caption="Optional caption" %}
+{%- endcomment -%}
+<figure>
+  <img src="{{ include.src | relative_url }}" alt="{{ include.alt | default: include.caption }}" loading="lazy">
+  {%- if include.caption %}
+  <figcaption>{{ include.caption }}</figcaption>
+  {%- endif %}
+</figure>

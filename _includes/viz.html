@@ -1,0 +1,12 @@
+{%- comment -%}
+  Embed an interactive figure (a standalone HTML page) in an iframe.
+  Usage: {% include viz.html src="/assets/viz.html" title="Short label" caption="Optional caption" height=420 %}
+  The figure page can resize its iframe by posting {type: 'viz-resize', height} to the parent;
+  the listener lives in _layouts/project.html.
+{%- endcomment -%}
+<figure class="viz">
+  <iframe src="{{ include.src | relative_url }}" title="{{ include.title }}" loading="lazy" style="height:{{ include.height | default: 420 }}px"></iframe>
+  {%- if include.caption %}
+  <figcaption>{{ include.caption }}</figcaption>
+  {%- endif %}
+</figure>

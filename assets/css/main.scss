@@ -457,10 +457,35 @@ img { max-width: 100%; height: auto; display: block; }
   border: 1px solid var(--border);
   background: var(--figure-bg);
 }
+.prose figure.viz iframe {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
 .prose figcaption {
   margin-top: 0.6rem;
   font-size: 0.9rem;
   color: var(--muted);
+}
+
+.prose table {
+  width: 100%;
+  margin: 0 0 1.5em;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.prose th, .prose td {
+  padding: 0.45em 0.75em;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.prose th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 code {

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weyl points</title>
+<style>
+:root{--fg:#2C2C2A;--sec:#5F5E5A;--muted:#888780;--line:#D3D1C7;--accent:#1D9E75;--warm:#D85A30;--cool:#378ADD;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441}}
+:root[data-theme="dark"]{--fg:#F1EFE8;--sec:#B4B2A9;--line:#444441}
+html,body{margin:0;background:transparent;color:var(--fg);font:14px/1.5 var(--font)}
+.viz{max-width:760px;margin:0 auto;padding:12px 10px}
+canvas{display:block;width:100%;touch-action:none;cursor:grab}
+.row{display:flex;align-items:center;gap:10px;color:var(--sec);margin-top:10px}
+.row label{min-width:96px}
+.row input[type=range]{flex:1;min-width:0;max-width:280px;accent-color:var(--accent)}
+.out{min-width:56px;text-align:right;font-variant-numeric:tabular-nums}
+.note{color:var(--sec);font-size:13px;margin-top:6px;min-height:3em}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:12px;color:var(--sec);margin-top:6px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="viz" role="figure" aria-label="Interactive figure: two Weyl points of opposite chirality act as a source and a sink of Berry curvature. A sphere can be moved and resized; the Chern number computed on it counts the Weyl charge it encloses.">
+  <canvas id="c" style="height:360px" aria-label="Berry curvature field around two Weyl points, with a sphere whose Chern number is computed; drag to rotate"></canvas>
+  <div class="legend">
+    <span><i style="background:var(--warm)"></i>Weyl point, C = +1 (source)</span>
+    <span><i style="background:var(--cool)"></i>Weyl point, C = −1 (sink)</span>
+    <span>Sphere shading: curvature flux out (orange) / in (blue)</span>
+  </div>
+  <div class="row"><label for="x">Sphere center k<sub>x</sub></label><input id="x" type="range" min="-2.5" max="2.5" step="0.05" value="1"><span class="out" id="xv"></span></div>
+  <div class="row"><label for="r">Sphere radius</label><input id="r" type="range" min="0.2" max="2.6" step="0.05" value="0.8"><span class="out" id="rv"></span></div>
+  <div class="note" id="note"></div>
+</div>
+<script>
+const P=new URLSearchParams(location.search);if(P.get('theme'))document.documentElement.dataset.theme=P.get('theme');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function prep(c){const r=c.getBoundingClientRect(),q=window.devicePixelRatio||1;c.width=Math.max(1,Math.round(r.width*q));c.height=Math.max(1,Math.round(r.height*q));const g=c.getContext('2d');g.setTransform(q,0,0,q,0,0);return[g,r.width,r.height]}
+function postH(){if(window.parent!==window)window.parent.postMessage({type:'viz-resize',height:document.documentElement.scrollHeight},'*')}
+if(window.parent!==window)document.documentElement.style.overflow='hidden';
+new ResizeObserver(postH).observe(document.body);
+
+const PI=Math.PI,TAU=2*PI;
+const CV=document.getElementById('c'),X=document.getElementById('x'),RR=document.getElementById('r');
+let yaw=0.35,pitch=1.15;
+// h(k) = ((kx^2-1)/2, ky, kz): Weyl points at kx = +1 (chirality +1) and kx = -1 (chirality -1)
+const WEYL=[[1,0,0,1],[-1,0,0,-1]];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const om=(a,b,c)=>2*Math.atan2(dot(a,cr(b,c)),1+dot(a,b)+dot(b,c)+dot(c,a));
+function nh(k){const x=(k[0]*k[0]-1)/2,y=k[1],z=k[2],n=Math.hypot(x,y,z)||1;return[x/n,y/n,z/n]}
+// Lower-band Berry curvature as a vector: Ω_a = ½ ĥ·(∂_b ĥ × ∂_c ĥ) for (a,b,c) cyclic
+function curv(k){const e=1e-4,D=i=>{const p=k.slice(),m=k.slice();p[i]+=e;m[i]-=e;const a=nh(p),b=nh(m);return[(a[0]-b[0])/(2*e),(a[1]-b[1])/(2*e),(a[2]-b[2])/(2*e)]};
+  const n=nh(k),dx=D(0),dy=D(1),dz=D(2);return[dot(n,cr(dy,dz))/2,dot(n,cr(dz,dx))/2,dot(n,cr(dx,dy))/2]}
+const sph=(c,R,t,p)=>[c[0]+R*Math.sin(t)*Math.cos(p),c[1]+R*Math.sin(t)*Math.sin(p),c[2]+R*Math.cos(t)];
+// Chern number on the sphere: signed solid angle swept by ĥ, over 4π
+function chern(c,R){const NT=40,NP=80;let s=0;
+  for(let i=0;i<NT;i++)for(let j=0;j<NP;j++){const t0=PI*i/NT,t1=PI*(i+1)/NT,p0=TAU*j/NP,p1=TAU*(j+1)/NP;
+    const A=nh(sph(c,R,t0,p0)),B=nh(sph(c,R,t1,p0)),C=nh(sph(c,R,t1,p1)),D=nh(sph(c,R,t0,p1));s+=om(A,B,C)+om(A,C,D)}
+  return Math.round(s/(4*PI))}
+function rot(p){let[x,y,z]=p;const cy=Math.cos(yaw),sy=Math.sin(yaw);[x,y]=[cy*x-sy*y,sy*x+cy*y];const cp=Math.cos(pitch),sp=Math.sin(pitch);[y,z]=[cp*y-sp*z,sp*y+cp*z];return[x,y,z]}
+
+// Field sample grid, offset so no sample lands on a Weyl point
+const GRID=[];for(let i=-4;i<=4;i++)for(let j=-2;j<=2;j++)for(let l=-2;l<=2;l++){const k=[0.6*i,0.6*j,0.6*l],w=curv(k),m=Math.hypot(...w);GRID.push([k,w.map(v=>v/m),m])}
+
+function draw(){
+  const cx0=+X.value,R=+RR.value,c=[cx0,0,0];
+  document.getElementById('xv').textContent=cx0.toFixed(2);document.getElementById('rv').textContent=R.toFixed(2);
+  const[g,w,h]=prep(CV);const sec=css('--sec'),muted=css('--muted'),warm=css('--warm'),cool=css('--cool'),acc=css('--accent');
+  const sc=Math.min(w/6.2,h/3.6),ox=w/2,oy=h/2+10;const pr=p=>{const q=rot(p);return[ox+q[0]*sc,oy-q[1]*sc,q[2]]};
+  const items=[];
+  // axes
+  for(const[a,L,lab]of[[[1,0,0],2.9,'kx'],[[0,1,0],1.6,'ky'],[[0,0,1],1.6,'kz']]){const p=pr(a.map(v=>-v*L)),q=pr(a.map(v=>v*L));
+    items.push({z:-99,f:()=>{g.globalAlpha=0.6;g.strokeStyle=muted;g.lineWidth=0.75;g.setLineDash([3,3]);g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke();g.setLineDash([]);g.fillStyle=sec;g.font='12px '+css('--font');g.fillText(lab,q[0]+4,q[1]-4)}})}
+  // Berry curvature arrows
+  for(const[k,u,m]of GRID){const L=0.06+0.32*Math.tanh(0.8*m),b=k.map((v,i)=>v-u[i]*L/2),t=k.map((v,i)=>v+u[i]*L/2),p=pr(b),q=pr(t);
+    items.push({z:(p[2]+q[2])/2,f:()=>{const dx=q[0]-p[0],dy=q[1]-p[1],l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,s=Math.min(5,0.45*l);
+      g.strokeStyle=sec;g.lineWidth=1.1;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);
+      g.moveTo(q[0],q[1]);g.lineTo(q[0]-s*(ux-0.5*uy),q[1]-s*(uy+0.5*ux));g.moveTo(q[0],q[1]);g.lineTo(q[0]-s*(ux+0.5*uy),q[1]-s*(uy-0.5*ux));g.stroke()}})}
+  // sphere, shaded by outward flux density Ω·n
+  const NT=18,NP=36;
+  for(let i=1;i<NT;i++)for(let j=0;j<NP;j++){const t=PI*i/NT,ph=TAU*j/NP,k=sph(c,R,t,ph),n=[Math.sin(t)*Math.cos(ph),Math.sin(t)*Math.sin(ph),Math.cos(t)],f=dot(curv(k),n),p=pr(k),a=Math.tanh(1.5*Math.abs(f));
+    items.push({z:p[2],a:0.25+0.75*a,f:()=>{g.fillStyle=f>0?warm:cool;g.beginPath();g.arc(p[0],p[1],1.4+1.6*a,0,TAU);g.fill()}})}
+  // Weyl points
+  for(const[x,y,z,ch]of WEYL){const p=pr([x,y,z]);items.push({z:p[2]+0.02,f:()=>{g.fillStyle=ch>0?warm:cool;g.beginPath();g.arc(p[0],p[1],6,0,TAU);g.fill();
+    g.fillStyle='#fff';g.font='bold 11px '+css('--font');g.textAlign='center';g.textBaseline='middle';g.fillText(ch>0?'+':'−',p[0],p[1]+0.5);g.textAlign='start';g.textBaseline='alphabetic'}})}
+  items.sort((a,b)=>a.z-b.z);let z0=1e9,z1=-1e9;for(const o of items)if(o.z>-99){if(o.z<z0)z0=o.z;if(o.z>z1)z1=o.z}
+  for(const o of items){const d=o.z>-99?0.25+0.75*(o.z-z0)/(z1-z0+1e-9):1;g.globalAlpha=d*(o.a??1);o.f()}g.globalAlpha=1;
+  // sphere outline
+  const q=pr(c);g.strokeStyle=acc;g.lineWidth=1;g.globalAlpha=0.7;g.beginPath();g.arc(q[0],q[1],R*sc,0,TAU);g.stroke();g.globalAlpha=1;
+  g.fillStyle=sec;g.font='12px '+css('--font');g.fillText('Berry curvature of the lower band',8,16);
+
+  const touch=WEYL.some(([x,y,z])=>Math.abs(Math.hypot(x-c[0],y,z)-R)<0.04);
+  const inside=WEYL.filter(([x,y,z])=>Math.hypot(x-c[0],y,z)<R).map(p=>p[3]);
+  const note=document.getElementById('note');
+  if(touch){note.textContent='The sphere passes through a Weyl point, where the gap closes, so the Chern number is not defined.';return}
+  const C=chern(c,R),Cs=(C>0?'+':C<0?'−':'')+Math.abs(C);
+  note.textContent='Chern number on the sphere: C = '+Cs+'. '+(inside.length===2?'The source and sink cancel. In a lattice, Weyl points always come in such pairs, so the net charge is zero.'
+    :inside.length?'The sphere encloses the '+(inside[0]>0?'source':'sink')+', and its curvature flux is '+(inside[0]>0?'+':'−')+'2π.'
+    :'No Weyl point is enclosed: whatever curvature flows in also flows out.');
+}
+let drag=null;
+CV.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];CV.setPointerCapture(e.pointerId)});
+CV.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-drag[0])*0.01;pitch=Math.max(0.1,Math.min(2.9,pitch-(e.clientY-drag[1])*0.01));drag=[e.clientX,e.clientY];draw()});
+CV.addEventListener('pointerup',()=>drag=null);
+X.addEventListener('input',draw);RR.addEventListener('input',draw);
+addEventListener('resize',()=>{draw();postH()});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+draw();postH();
+</script>
+</body>
+</html>
