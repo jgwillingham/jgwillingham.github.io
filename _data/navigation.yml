@@ -1,7 +1,7 @@
 # Top navigation, in display order.
 - title: About
   url: /about/
-- title: Projects & Essays
+- title: Projects
   url: /projects/
 - title: Library
   url: /notes/
