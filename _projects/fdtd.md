@@ -2,7 +2,7 @@
 title: FDTD on a GPU
 category: Computational Physics
 summary: >-
-  Finite-Difference Time Domain (FDTD) solves Maxwell's equations by leapfrogging spacetime-staggered electric and magnetic fields. Here I write a GPU-accelerated solver using PyTorch
+  Finite-Difference Time Domain (FDTD) is a numerical method in electrodynamics that is GPU-friendly
 context: Developing a GPU-accelerated numerical electrodynamics solver
 image: /assets/img/yee_algorithm.png
 image_alt: Leapfrogging in the Yee algorithm

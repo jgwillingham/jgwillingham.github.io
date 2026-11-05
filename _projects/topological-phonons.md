@@ -2,8 +2,7 @@
 title: Topological Phonons
 category: Theoretical physics
 summary: >-
-  Numerical phonon calculations in Julia reveal that topological band crossings in CdTe
-  lead to double arcs in the (110) surface dispersion.
+  Overview of topology in quantum matter and my research on topologically protected surface phonons in CdTe
 context: Part of my research in the physics Ph.D. program at Boston University.
 image: /assets/img/arcs.png
 image_alt: Computed (110) surface phonon dispersion of CdTe showing double surface arcs

@@ -4,14 +4,14 @@
 
 /* ---------- Design tokens ---------- */
 :root {
-  --bg: #ffffff;
-  --surface: #f5f7f9;
-  --text: #1c2228;
-  --muted: #5a6570;
-  --border: #e1e5e9;
-  --accent: #1b5c7d;
-  --accent-strong: #134560;
-  --accent-soft: #e6f0f5;
+  --bg: rgb(250, 248, 245);
+  --surface: #f3f0ea;
+  --text: #1a1917;
+  --muted: #6a6862;
+  --border: #e4dfd5;
+  --accent: #a8492a;
+  --accent-strong: #7c3820;
+  --accent-soft: #f3e4d8;
   --figure-bg: #ffffff;
 
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -29,14 +29,14 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg:   #16130e;
-    --surface: #161d23;
-    --text: #e4e8ec;
-    --muted: #98a4b0;
-    --border: #2d3338;
-    --accent: #66a4c5;
-    --accent-strong: #9ccbe5;
-    --accent-soft: #15323e;
+    --bg: #1f1e1d;
+    --surface: #2a2927;
+    --text: #f0eee6;
+    --muted: #a9a79c;
+    --border: #3d3b37;
+    --accent: #86abc9;
+    --accent-strong: #acc8dd;
+    --accent-soft: #243440;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.3);
     --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.45);
   }
@@ -125,6 +125,35 @@ img { max-width: 100%; height: auto; display: block; }
   margin-bottom: 1.25rem;
 }
 .section-head h2 { margin: 0; }
+.section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: none;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+}
+.section-link::after {
+  content: "";
+  width: 0.45em;
+  height: 0.45em;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s;
+}
+.section-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.section-link:hover::after { transform: translateX(2px) rotate(45deg); }
 
 .eyebrow {
   margin: 0 0 0.4rem;
@@ -235,6 +264,9 @@ img { max-width: 100%; height: auto; display: block; }
   .btn, .btn:hover { color: var(--bg); }
   .btn--ghost, .btn--ghost:hover { color: var(--accent); }
 }
+
+.btn--icon { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.4rem 0.8rem; font-size: 0.9rem; }
+.btn__icon { flex: none; }
 
 /* ---------- Home hero ---------- */
 .hero {

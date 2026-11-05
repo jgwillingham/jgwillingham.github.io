@@ -1,8 +1,11 @@
 # Top navigation, in display order.
-- title: Projects
+- title: About
+  url: /about/
+- title: Projects & Essays
   url: /projects/
-- title: Notes
+- title: Library
   url: /notes/
   requires_notes: true   # hidden until _data/notes.yml lists a note
 - title: Experience
   url: /experience/
+

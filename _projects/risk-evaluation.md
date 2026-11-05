@@ -1,7 +1,7 @@
 ---
 title: Monte Carlo Risk Evaluation with Copulas
 category: Statistical Modeling
-summary: A Python package that models stock and option portfolios with copulas and estimates their value-at-risk with Monte Carlo
+summary: Modeling correlated stock prices with copulas for Monte Carlo risk estimation
 context: A personal project on modeling correlated stock prices and simulating portfolio risk
 image: /assets/img/risky/payoff-evolution.png
 image_alt: Time evolution of the distribution of simulated portfolio payoffs
