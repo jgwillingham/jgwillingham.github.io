@@ -2,8 +2,7 @@
 title: Class D Amplifier Build
 category: Circuit design
 summary: >-
-  By abandoning linear operation, class D amplifiers attain high power efficiency without
-  sacrificing fidelity. Here I design, simulate and build a full-bridge, closed-loop class D amplifier.
+  Designing, Simulating, and building a full-bridge, closed-loop class D amplifier
 image: /assets/img/class-d-diagram.png
 image_alt: Block diagram of a full-bridge, closed-loop class D amplifier
 featured: false

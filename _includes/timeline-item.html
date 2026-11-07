@@ -8,7 +8,10 @@
 <li class="timeline__item">
   <span class="timeline__year">{{ e.year }}</span>
   <p class="timeline__role">{{ e.role }}</p>
-  <p class="timeline__org">{{ e.org }}</p>
+  <p class="timeline__org">
+    {%- if e.logo %}<img class="timeline__logo{% if e.logo_class %} {{ e.logo_class }}{% endif %}" src="{{ e.logo | relative_url }}" alt="" loading="lazy">{% endif -%}
+    <span>{{ e.org }}</span>
+  </p>
   {%- if e.tags %}
   <ul class="tags">
     {%- for tag in e.tags %}

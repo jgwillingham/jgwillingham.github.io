@@ -1,33 +1,39 @@
 # Newest first. `kind: milestone` renders as a compact line instead of a card.
-- year: 2026
+- year: 2026-present
   role: Senior Machine Learning Engineer
   org: Mirion
-  tags: [Embedded AI, Cloud Monte Carlo, PINNs]
+  logo: /assets/img/logos/mirion.svg
+  tags: [Embedded AI, Cloud Monte Carlo, Gamma spectroscopy]
 
-- year: 2021
+- year: 2021-2026
   role: Signal Processing Engineer
   org: Leidos
+  logo: /assets/img/logos/leidos.svg
   tags: [Inverse problems, Sensor characterization, Cognitive radio]
 
 - year: 2021
   kind: milestone
-  text: Left the Boston University physics Ph.D. program with my master's
+  text: Left the BU physics Ph.D. program with my master's
 
-- year: 2018
+- year: 2018-2021
   role: Condensed Matter Physics Research
   org: Boston University Surface Physics Lab
-  tags: [Lattice dynamics, Band topology, atomic scattering]
+  logo: /assets/img/logos/boston-university-transparent.png
+  tags: [Lattice dynamics, Band topology, Atomic scattering]
 
-- year: 2017
+- year: 2017-2018
   role: Data Science Intern
   org: Fluence Analytics
-  tags: [Static light scattering, Instrumentation R&D, Data analysis]
+  logo: /assets/img/logos/fluence_analytics_transparent.png
+  logo_class: timeline__logo--lift
+  tags: [Static light scattering, Instrumentation R&D, UV-vis spectroscopy]
 
 - year: 2017
   kind: milestone
   text: B.S. in Physics, Tulane University
 
-- year: 2016
+- year: 2016-2017
   role: Nanodevice Physics Research
   org: Tulane University Quantum Device Lab
+  logo: /assets/img/logos/Tulane_University_Logo.svg.webp
   tags: [Atomic force microscopy, PID control, 2D materials]
