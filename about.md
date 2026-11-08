@@ -5,9 +5,11 @@ permalink: /about/
 ---
 <div class="prose" markdown="1">
 
-I am an R&D engineer working at the intersection of machine learning and physics. Grounded in first principles, I build reliability from noisy sensor data through disciplined machine learning and algorithm design. Simply put, I love applied math. 
+I am an R&D engineer working at the intersection of machine learning and physics. Grounded in first principles, I build reliability from noisy sensor data through disciplined machine learning and algorithm design. 
 
-I originally found the joy of math through physics, and I came to physics via my long-time interest in music and philosophy. I think it was the physics of musical instruments (resonance & harmonics) and the power of audio signal processing that captured my imagination so much. Throw in the philosophical depth that the phrase "laws of nature" inspires, and I was hooked. I graduated from Tulane with a degree in physics and knew right out the gate that I wanted to go deeper. I wanted the PhD. The only question I had was whether to focus on physics or signal processing.
+Simply put, I love applied math. 
+
+I originally found the joy of math through physics, and I came to physics via my long-time interest in music and philosophy. I think it was the physics of musical instruments (resonance & harmonics) and the power of audio signal processing that captured my imagination so much. Throw in the philosophical depth that the phrase "laws of nature" inspires, and I was hooked. I graduated from Tulane with a degree in physics and knew right out the gate that I wanted to go deeper. I wanted the Ph.D. The only question I had was whether to focus on physics or signal processing.
 
 In the end, physics won out. After working for a year at a Tulane-affiliated polymerization monitoring company, I started the physics Ph.D. program at Boston University. Immediately, I joined the surface physics lab at BU where I operated an ultra high vacuum (UHV) chamber and ran helium atom scattering experiments to measure phonon properties at the surface of topological materials. To inform these experiments, I developed phenomenological models and used numerical methods to compute surface phonon properties. My research was going well and my work on topological phonons in CdTe was set to be my thesis. Then covid hit.
 

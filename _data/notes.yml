@@ -1,64 +1,65 @@
-# Notes listed on /notes/, grouped by subject (shown in this order).
+# Notes listed on /notes/ (shown in this order, as a flat searchable list).
 # The Notes nav link appears automatically once at least one note is listed.
 #
 # Each note:
 #   title:       shown as the link text
 #   path:        <subject-folder>/<note-folder> in the notes repo; the PDF is <pdf_url>/<path>.pdf
 #   description: one or two sentences
-#   topics:      optional list of tags
+#   tags:        list of tags (subject, topics, ...); shown as chips, searchable, click to filter
 #   status:      optional; "draft" shows an "In progress" badge
 #
 # Example:
-#   - subject: Mathematics
-#     notes:
-#       - title: Linear Algebra
-#         path: mathematics/linear-algebra
-#         description: Vector spaces, linear maps and spectral theory, with physics applications.
-#         topics: [Vector spaces, Eigenvalues, Inner products]
-#         status: draft
+#   - title: Linear Algebra
+#     path: mathematics/linear-algebra
+#     description: Vector spaces, linear maps and spectral theory, with physics applications.
+#     tags: [Mathematics, Eigenvalues]
+#     status: draft
 
-- subject: Mathematics
-  notes:
-    - title: Representation Theory
-      path: mathematics/representation-theory
-      description: Representing groups as linear transformations on vector spaces.
-    - title: Linear Algebra
-      path: mathematics/linear-algebra
-      description: Vector spaces, linear maps and spectral theory, with physics applications.
-    - title: Lie Theory
-      path: mathematics/lie-theory
-      description: Notes on Lie groups, Lie algebras, and their representations.
-    - title: Compressed Sensing
-      path: mathematics/compressed-sensing
-      description: Notes on compressed sensing, sparse recovery, and convex optimization
-
-
-- subject: Physics
-  notes:
-    - title: Quantum Field Theory
-      path: physics/quantum-field-theory
-      description: Notes on many-body and relativistic quantum mechanics
-    - title: Quantum Mechanics
-      path: physics/quantum-mechanics
-      description: Notes on quantum mechanics
-    - title: Electromagnetic theory
-      path: physics/electromagnetic-theory
-      description: Notes on electromagnetic theory
-    - title: Lattice Dynamics
-      path: physics/lattice-dynamics
-      description: Notes on phonon calculations in the bulk and surface of crystals
-
-- subject: Engineering
-  notes:
-    - title: Machine Learning
-      path: engineering/machine-learning
-      description: Notes on statistical learning theory, classic models, and deep learning
-    - title: Hidden Markov Models
-      path: mathematics/hmm
-      description: Notes on hidden Markov models
-    - title: 3-Phase Machines
-      path: engineering/3-phase-machines
-      description: Study of the design, operation, and control of three-phase electrical machines.
-    - title: Spectrum Estimation
-      path: engineering/spectrum-estimation
-      description: Techniques for estimating the spectral content of signals
+- title: Representation Theory
+  path: mathematics/representation-theory
+  description: Representing groups as linear transformations on vector spaces.
+  tags: [Math, Symmetry, Algebra]
+- title: Linear Algebra
+  path: mathematics/linear-algebra
+  description: Vector spaces, linear maps and spectral theory, with physics applications.
+  tags: [Math, Algebra]
+- title: Lie Theory
+  path: mathematics/lie-theory
+  description: Notes on Lie groups, Lie algebras, and their representations.
+  tags: [Math, Geometry, Algebra, Symmetry]
+- title: Compressed Sensing
+  path: mathematics/compressed-sensing
+  description: Notes on compressed sensing, sparse recovery, and convex optimization
+  tags: [Math, Signal Processing]
+- title: Quantum Field Theory
+  path: physics/quantum-field-theory
+  description: Notes on many-body and relativistic quantum mechanics
+  tags: [Physics]
+- title: Quantum Mechanics
+  path: physics/quantum-mechanics
+  description: Notes on quantum mechanics
+  tags: [Physics]
+- title: Electromagnetic theory
+  path: physics/electromagnetic-theory
+  description: Notes on electromagnetic theory
+  tags: [Physics]
+- title: Lattice Dynamics
+  path: physics/lattice-dynamics
+  description: Notes on phonon calculations in the bulk and surface of crystals
+  tags: [Physics]
+- title: Machine Learning
+  path: engineering/machine-learning
+  description: Notes on statistical learning theory, classic models, and deep learning
+  tags: [Modeling, AI/ML]
+- title: Hidden Markov Models
+  path: mathematics/hmm
+  description: Notes on hidden Markov models
+  tags: [Modeling]
+- title: 3-Phase Machines
+  path: engineering/3-phase-machines
+  description: Study of the design, operation, and control of three-phase electrical machines.
+  tags: [Engineering]
+- title: Spectrum Estimation
+  path: engineering/spectrum-estimation
+  description: Techniques for estimating the spectral content of signals
+  tags: [Signal Processing]

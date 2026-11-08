@@ -572,30 +572,71 @@ pre code { padding: 0; border: 0; background: none; }
 mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; }
 
 /* ---------- Notes ---------- */
-.subject-jump { margin-bottom: 2.5rem; }
-.subject-jump a { color: inherit; text-decoration: none; }
-.subject-jump a:hover { text-decoration: underline; }
-.subject-jump .count { opacity: 0.7; margin-left: 0.15rem; }
-
-.note-group { max-width: var(--measure); }
-.note-group + .note-group { margin-top: 3rem; }
+.note-filter { margin-bottom: 2rem; }
+.note-filter__input {
+  width: 100%;
+  max-width: 28rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.note-filter__input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tags--filter button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.tags--filter li:has(button[aria-pressed="true"]) {
+  background: var(--accent);
+  color: var(--bg);
+}
+.tags--filter li:has(button[aria-pressed="true"]) button { color: var(--bg); }
 
 .note-list {
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--border);
 }
-.note {
-  padding: 1.1rem 0 1.2rem;
+.note-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 0.8fr);
+  gap: 0.35rem 2rem;
+  align-items: baseline;
+  padding: 1rem 0;
   border-bottom: 1px solid var(--border);
 }
-.note__head {
+.note-row[hidden] { display: none; }
+.note-row--head {
+  padding: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.note-row__title {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.75rem;
+  gap: 0.2rem 0.6rem;
 }
+.note-row__desc { margin: 0; color: var(--muted); }
+.note-row .tags { margin: 0; }
+.note__updated, .note__source { flex-basis: 100%; font-size: 0.82rem; color: var(--muted); }
+.note-empty { color: var(--muted); }
+
+@media (max-width: 720px) {
+  .note-row { grid-template-columns: 1fr; }
+  .note-row--head { display: none; }
+  .note-row__tags { margin-top: 0.4rem; }
+}
+
 .note__title {
   font-family: var(--font-serif);
   font-size: 1.15rem;

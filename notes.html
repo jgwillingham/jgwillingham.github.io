@@ -1,67 +1,95 @@
 ---
 title: Notes Library
-subtitle: My notes on various topics (under construction)
+subtitle: A collection of notes I have written on various subjects
 permalink: /notes/
 redirect_from: /html/notes.html
 ---
-{%- assign note_count = 0 -%}
-{%- for group in site.data.notes %}{% assign note_count = note_count | plus: group.notes.size %}{% endfor -%}
+{%- assign notes = site.data.notes -%}
 
-{%- if note_count == 0 %}
+{%- if notes.size == 0 %}
 <p class="lede">Notes are on the way.</p>
 {%- else %}
 
-<nav class="subject-jump" aria-label="Subjects">
-  <ul class="tags">
-    {%- for group in site.data.notes %}
-    {%- if group.notes.size > 0 %}
-    <li><a href="#{{ group.subject | slugify }}">{{ group.subject }} <span class="count">{{ group.notes.size }}</span></a></li>
+{%- assign all_tags = notes | map: "tags" | join: "," | split: "," | uniq | sort_natural %}
+
+<div class="note-filter">
+  <input class="note-filter__input" type="search" id="note-search" placeholder="Filter notes by title, description or tag" aria-label="Filter notes" autocomplete="off">
+  <ul class="tags tags--filter" id="note-tags" aria-label="Filter by tag">
+    {%- for tag in all_tags %}
+    {%- if tag != "" %}
+    <li><button type="button" data-tag="{{ tag | downcase }}" aria-pressed="false">{{ tag }}</button></li>
     {%- endif %}
     {%- endfor %}
   </ul>
-</nav>
+</div>
 
-{%- for group in site.data.notes %}
-{%- if group.notes.size > 0 %}
-<section class="note-group" id="{{ group.subject | slugify }}">
-  <h2>{{ group.subject }}</h2>
+<div class="note-table" id="note-table">
+  <div class="note-row note-row--head" aria-hidden="true">
+    <span>Title</span>
+    <span>Description</span>
+    <span>Tags</span>
+  </div>
   <ul class="note-list">
-    {%- for note in group.notes %}
-    <li class="note" data-note="{{ note.path }}">
-      <div class="note__head">
+    {%- for note in notes %}
+    {%- assign tag_text = note.tags | join: " " %}
+    <li class="note-row" data-note="{{ note.path }}" data-tags="{{ note.tags | join: ',' | downcase }}" data-text="{{ note.title | append: ' ' | append: note.description | append: ' ' | append: tag_text | downcase | escape }}">
+      <div class="note-row__title">
         <a class="note__title" href="{{ site.notes.pdf_url }}/{{ note.path }}.pdf">{{ note.title }}</a>
         {%- if note.status == "draft" %}
         <span class="badge">In progress</span>
         {%- endif %}
-      </div>
-      {%- if note.description %}
-      <p class="note__desc">{{ note.description }}</p>
-      {%- endif %}
-      {%- if note.topics %}
-      <ul class="tags">
-        {%- for topic in note.topics %}
-        <li>{{ topic }}</li>
-        {%- endfor %}
-      </ul>
-      {%- endif %}
-      <p class="note__meta">
-        <span>PDF</span>
         <span class="note__updated" hidden></span>
         {%- if site.notes.source_url != "" %}
-        <a href="{{ site.notes.source_url }}/tree/main/notes/{{ note.path }}">LaTeX source</a>
+        <a class="note__source" href="{{ site.notes.source_url }}/tree/main/notes/{{ note.path }}">LaTeX source</a>
         {%- endif %}
-      </p>
+      </div>
+      <p class="note-row__desc">{{ note.description }}</p>
+      <ul class="tags note-row__tags">
+        {%- for tag in note.tags %}
+        <li>{{ tag }}</li>
+        {%- endfor %}
+      </ul>
     </li>
     {%- endfor %}
   </ul>
-</section>
-{%- endif %}
-{%- endfor %}
+  <p class="note-empty" id="note-empty" hidden>No notes match.</p>
+</div>
 
 <script>
-  // Fill in "Updated <date> · <size>" from the manifest the notes repo publishes
-  // next to its PDFs, and flag listed notes whose PDF hasn't been published.
   (function () {
+    // Filtering: text box (all words must match) AND any selected tag chips (note must have all selected).
+    var input = document.getElementById('note-search');
+    var chips = document.querySelectorAll('#note-tags button');
+    var rows = document.querySelectorAll('.note-list .note-row');
+    var empty = document.getElementById('note-empty');
+
+    function apply() {
+      var words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+      var active = [];
+      chips.forEach(function (c) { if (c.getAttribute('aria-pressed') === 'true') active.push(c.getAttribute('data-tag')); });
+      var shown = 0;
+      rows.forEach(function (row) {
+        var text = row.getAttribute('data-text');
+        var tags = row.getAttribute('data-tags').split(',');
+        var ok = words.every(function (w) { return text.indexOf(w) !== -1; }) &&
+                 active.every(function (t) { return tags.indexOf(t) !== -1; });
+        row.hidden = !ok;
+        if (ok) shown++;
+      });
+      empty.hidden = shown !== 0;
+    }
+
+    input.addEventListener('input', apply);
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var on = chip.getAttribute('aria-pressed') === 'true';
+        chip.setAttribute('aria-pressed', on ? 'false' : 'true');
+        apply();
+      });
+    });
+
+    // Fill in "Updated <date> · <size>" from the manifest the notes repo publishes
+    // next to its PDFs, and flag listed notes whose PDF hasn't been published.
     var base = {{ site.notes.pdf_url | jsonify }};
     fetch(base + '/manifest.json')
       .then(function (r) { return r.ok ? r.json() : null; })
