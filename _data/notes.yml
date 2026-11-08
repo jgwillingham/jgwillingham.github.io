@@ -3,63 +3,63 @@
 #
 # Each note:
 #   title:       shown as the link text
-#   path:        <subject-folder>/<note-folder> in the notes repo; the PDF is <pdf_url>/<path>.pdf
+#   path:        the note's folder name under notes/ in the notes repo; the PDF is <pdf_url>/<path>.pdf
 #   description: one or two sentences
 #   tags:        list of tags (subject, topics, ...); shown as chips, searchable, click to filter
 #   status:      optional; "draft" shows an "In progress" badge
 #
 # Example:
 #   - title: Linear Algebra
-#     path: mathematics/linear-algebra
+#     path: linear_algebra
 #     description: Vector spaces, linear maps and spectral theory, with physics applications.
 #     tags: [Mathematics, Eigenvalues]
 #     status: draft
 
 - title: Representation Theory
-  path: mathematics/representation-theory
+  path: representation_theory
   description: Representing groups as linear transformations on vector spaces.
   tags: [Math, Symmetry, Algebra]
 - title: Linear Algebra
-  path: mathematics/linear-algebra
+  path: linear_algebra
   description: Vector spaces, linear maps and spectral theory, with physics applications.
   tags: [Math, Algebra]
 - title: Lie Theory
-  path: mathematics/lie-theory
+  path: lie_theory
   description: Notes on Lie groups, Lie algebras, and their representations.
   tags: [Math, Geometry, Algebra, Symmetry]
 - title: Compressed Sensing
-  path: mathematics/compressed-sensing
+  path: compressed_sensing
   description: Notes on compressed sensing, sparse recovery, and convex optimization
   tags: [Math, Signal Processing]
 - title: Quantum Field Theory
-  path: physics/quantum-field-theory
+  path: qft
   description: Notes on many-body and relativistic quantum mechanics
   tags: [Physics]
 - title: Quantum Mechanics
-  path: physics/quantum-mechanics
+  path: quantum_mechanics
   description: Notes on quantum mechanics
   tags: [Physics]
 - title: Electromagnetic theory
-  path: physics/electromagnetic-theory
+  path: electromagnetic_theory
   description: Notes on electromagnetic theory
   tags: [Physics]
 - title: Lattice Dynamics
-  path: physics/lattice-dynamics
+  path: lattice_dynamics
   description: Notes on phonon calculations in the bulk and surface of crystals
   tags: [Physics]
 - title: Machine Learning
-  path: engineering/machine-learning
+  path: machine_learning
   description: Notes on statistical learning theory, classic models, and deep learning
   tags: [Modeling, AI/ML]
 - title: Hidden Markov Models
-  path: mathematics/hmm
+  path: hmm
   description: Notes on hidden Markov models
   tags: [Modeling]
 - title: 3-Phase Machines
-  path: engineering/3-phase-machines
+  path: three_phase_machines
   description: Study of the design, operation, and control of three-phase electrical machines.
   tags: [Engineering]
 - title: Spectrum Estimation
-  path: engineering/spectrum-estimation
+  path: spectrum_estimation
   description: Techniques for estimating the spectral content of signals
   tags: [Signal Processing]
